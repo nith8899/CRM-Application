@@ -92,7 +92,7 @@ module.exports = [
 
   // ------------------------------------------------------------ M35 Claims
   {
-    key: 'claim_categories', table: 'claim_categories', label: 'Claim Category', plural: 'Claim Categories', module: 'M35', title: 'name', noScope: true,
+    key: 'claim_categories', table: 'claim_categories', label: 'Claim Category', plural: 'Claim Categories', module: 'M32', title: 'name', noScope: true,
     fields: [T('code', 'Code', { req: 1, list: 1, uniq: 1 }), T('name', 'Name', { req: 1, list: 1 }), M('limit_per_claim', 'Limit per line', { list: 1 }), M('receipt_threshold', 'Receipt required above', { list: 1, def: 25 }),
       B('requires_attendees', 'Requires attendee list', { def: false, list: 1 }), B('requires_event', 'Requires event / project link', { def: false }), S('status', 'Status', ['Active', 'Inactive'], { def: 'Active', list: 1 })],
   },

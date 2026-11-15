@@ -29,7 +29,7 @@ module.exports = [
       S('status', 'Status', ACTIVE, { list: 1, def: 'Active' })],
   },
   {
-    key: 'users', table: 'users', core: true, label: 'User', plural: 'Users', module: 'M24', title: 'name', noScope: true, adminOnlyWrite: true,
+    key: 'users', table: 'users', core: true, label: 'User', plural: 'Users', module: 'M24', title: 'name', noScope: true, adminOnlyWrite: true, hookColumns: ['password_hash', 'must_change_password', 'token_version'],
     fields: [
       T('name', 'Full name', { req: 1, list: 1, search: 1 }), T('login', 'Login', { req: 1, list: 1, search: 1, uniq: 1 }),
       E('email', 'Email', { req: 1, list: 1, search: 1, uniq: 1 }),

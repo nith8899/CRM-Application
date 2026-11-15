@@ -36,7 +36,11 @@ router.get('/lookup/:entity', wrap(async (req, res) => {
   if (e.key === 'users') { where.push(`t.status='Active'`); if (ctx.isExternal) where.push('false'); if (req.query.role) { params.push(req.query.role); where.push(`t.id IN (SELECT ur.user_id FROM user_roles ur JOIN roles r ON r.id=ur.role_id WHERE r.code=$${params.length})`); } }
   if (e.statusField && req.query.active === '1' && e.key !== 'users') { /* active filter is advisory */ }
   const tf = e.title === 'id' ? 't.id::text' : `t.${e.title}`;
-  if (q) { params.push(`%${q}%`); where.push(`(${tf}::text ILIKE $${params.length}${e.prefix ? ` OR t.number ILIKE $${params.length}` : ''})`); }
+  if (q) {
+    params.push(`%${q}%`);
+    const extra = e.fields.filter((f) => f.search && !f.virtual && f.name !== e.title).slice(0, 3).map((f) => ` OR t.${f.name}::text ILIKE $${params.length}`).join('');
+    where.push(`(${tf}::text ILIKE $${params.length}${e.prefix ? ` OR t.number ILIKE $${params.length}` : ''}${extra})`);
+  }
   if (req.query.id) { params.push(req.query.id); where.push(`t.id=$${params.length}`); }
   for (const [k, v] of Object.entries(req.query)) if (k.startsWith('f_') && e.fieldMap[k.slice(2)]) { params.push(v); where.push(`t.${k.slice(2)}::text=$${params.length}`); }
   const sub = e.key === 'users' ? 't.job_title' : e.key === 'accounts' ? 't.country' : e.key === 'products' ? 't.sku' : e.prefix ? 't.number' : 'NULL';
@@ -227,13 +231,12 @@ function validateSetting(key, value, existing) {
   if (/margin_floor/.test(key) && (value < -100 || value > 100)) throw bad('Margin floor must be a percentage');
   if (key === 'base_currency' && !/^[A-Z]{3}$/.test(value)) throw bad('Base currency must be an ISO code');
 }
-router.put('/settings/app/:key', wrap(async (req, res) => {
-  const ctx = req.ctx; const key = req.params.key; const { value, note, effective_from } = req.body || {};
+async function changeSetting(ctx, key, value, note, effective_from) {
   const { rows } = await db.query('SELECT * FROM app_settings WHERE key=$1', [key]);
   const s = rows[0]; if (!s) throw notFound('Unknown setting');
   if (!A.roleHas(ctx, ...(AREA_ROLES[s.area] || ['ROL-ADM']))) throw forbidden('You cannot change settings in this area');
   if (s.secret) { /* write-only */ } else validateSetting(key, value, s.value);
-  const out = await db.tx(async (c) => {
+  return db.tx(async (c) => {
     if (!s.sensitive) { await applySetting(key, value, ctx.id, c); await audit(ctx, { event: 'setting_changed', entity: 'app_settings', label: key, changes: { value: s.secret ? ['***', '***'] : [s.value, value] }, detail: note }, c); return { status: 'Applied' }; }
     const { rows: pv } = await c.query(`INSERT INTO app_setting_versions (key, version, value, changed_by, effective_from, note, status) VALUES ($1,$2,$3,$4,$5,$6,'Pending approval') RETURNING id`, [key, s.version + 1, JSON.stringify(value), ctx.id, effective_from || null, note || null]);
     const r = await approvals.submit(ctx, { type: 'config', entity: 'app_setting_versions', recordId: pv[0].id, label: `Setting ${key} → ${JSON.stringify(value)}`, snapshot: { area: s.area, amount_base: 0 }, comment: note }, c);
@@ -241,7 +244,10 @@ router.put('/settings/app/:key', wrap(async (req, res) => {
     await audit(ctx, { event: 'setting_change_requested', entity: 'app_settings', label: key, detail: `${r.request.number}: ${note || ''}` }, c);
     return { status: 'Pending approval', approval: r.request.number };
   });
-  res.json(out);
+}
+router.put('/settings/app/:key', wrap(async (req, res) => {
+  const { value, note, effective_from } = req.body || {};
+  res.json(await changeSetting(req.ctx, req.params.key, value, note, effective_from));
 }));
 router.get('/settings/app/:key/versions', wrap(async (req, res) => {
   if (!A.can(req.ctx, 'M32', 'V') && !A.can(req.ctx, 'M24', 'V')) throw forbidden();
@@ -250,13 +256,10 @@ router.get('/settings/app/:key/versions', wrap(async (req, res) => {
   res.json(rows.map((r) => (s[0] && s[0].secret ? { ...r, value: '••••••••' } : r)));
 }));
 router.post('/settings/app/:key/rollback', wrap(async (req, res) => {
-  const ctx = req.ctx;
   const { rows: s } = await db.query('SELECT * FROM app_settings WHERE key=$1', [req.params.key]); if (!s[0]) throw notFound();
   if (s[0].secret) throw bad('Secrets cannot be rolled back');
-  if (!A.roleHas(ctx, ...(AREA_ROLES[s[0].area] || ['ROL-ADM']))) throw forbidden();
-  const { rows: v } = await db.query(`SELECT * FROM app_setting_versions WHERE id=$1 AND key=$2`, [req.body.version_id, req.params.key]); if (!v[0]) throw notFound('Version not found');
-  req.params.key = s[0].key; req.body = { value: v[0].value, note: `Rollback to version ${v[0].version}` };
-  return router.handle(Object.assign(req, { method: 'PUT', url: `/settings/app/${s[0].key}` }), res, () => {});
+  const { rows: v } = await db.query('SELECT * FROM app_setting_versions WHERE id=$1 AND key=$2', [req.body.version_id, req.params.key]); if (!v[0]) throw notFound('Version not found');
+  res.json(await changeSetting(req.ctx, s[0].key, v[0].value, `Rollback to version ${v[0].version}`));
 }));
 
 // ------------------------------------------------------------ integrations (M25)

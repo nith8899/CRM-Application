@@ -294,3 +294,30 @@ test('documents: upload, access control and download', async () => {
   const bad = new FormData(); bad.append('file', new Blob(['x']), 'evil.exe');
   assert.equal((await raw('/api/documents', se1.token, { method: 'POST', body: bad })).status, 400);
 });
+
+test('user lifecycle: create via API, password policy, forced change, session revocation, deactivation reassigns records', async () => {
+  const adm = await as('admin');
+  const mgr = (await adm.get('/e/users?size=100')).data.rows.find((u) => u.login === 'sm.kh');
+  const base = { login: 'tmpowner', email: 'tmpowner@crm.demo', name: 'Temp Owner', status: 'Active', country: 'KH', manager_id: mgr.id, team_id: mgr.team_id };
+  assert.equal((await adm.post('/e/users', { ...base, password: 'weakpass' })).status, 400, 'weak password rejected');
+  const created = await adm.post('/e/users', { ...base, password: 'Strong@Pass123' }); assert.equal(created.status, 201);
+  const uid = created.data.id;
+  assert.equal((await adm.put(`/admin/users/${uid}/roles`, { roles: ['ROL-SE'] })).status, 200);
+  const tok = (await call('POST', '/api/auth/login', { login: 'tmpowner', password: 'Strong@Pass123' })).data.token; assert.ok(tok);
+  const me = await call('GET', '/api/auth/me', undefined, tok); assert.equal(me.data.must_change_password, true);
+  assert.equal((await call('POST', '/api/auth/change-password', { current_password: 'wrong', new_password: 'Another@Pass456' }, tok)).status, 400);
+  assert.equal((await call('POST', '/api/auth/change-password', { current_password: 'Strong@Pass123', new_password: 'short' }, tok)).status, 400, 'policy applies to changes');
+  const ch = await call('POST', '/api/auth/change-password', { current_password: 'Strong@Pass123', new_password: 'Another@Pass456' }, tok); assert.equal(ch.status, 200);
+  assert.equal((await call('GET', '/api/auth/me', undefined, tok)).status, 401, 'old session is revoked after a password change');
+  const tok2 = ch.data.token; assert.equal((await call('GET', '/api/auth/me', undefined, tok2)).status, 200);
+  // the new owner creates an opportunity, then is deactivated -> the record moves to the manager
+  const t2 = { get: (p) => call('GET', '/api' + p, undefined, tok2), post: (p, b) => call('POST', '/api' + p, b || {}, tok2) };
+  const acc = (await t2.get('/e/accounts?size=1')).data; void acc;
+  const sm = await as('sm.kh'); const a = (await sm.get('/e/accounts?size=1')).data.rows[0];
+  const opp = await adm.post('/e/opportunities', { name: 'Orphan test deal', account_id: a.id, opp_type: 'New business', route: 'Direct', source: 'Referral', amount: 1000, currency: 'USD', close_date: plusDays(30), bu_id: 1, country: 'KH', owner_id: uid });
+  assert.equal(opp.status, 201); assert.equal(opp.data.owner_id, uid);
+  assert.equal((await adm.put(`/e/users/${uid}`, { status: 'Deactivated', version: (await adm.get(`/e/users/${uid}`)).data.version })).status, 200);
+  const moved = (await adm.get(`/e/opportunities/${opp.data.id}`)).data; assert.equal(moved.owner_id, mgr.id, 'open records move to the manager (BRULE-OPP-001)');
+  assert.equal((await call('POST', '/api/auth/login', { login: 'tmpowner', password: 'Another@Pass456' })).status, 403, 'deactivated users cannot sign in');
+  assert.equal((await call('GET', '/api/auth/me', undefined, tok2)).status, 401, 'sessions revoked on deactivation');
+});

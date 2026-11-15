@@ -91,6 +91,16 @@ hooks.register('stage_definitions', {
   afterCreate: () => opps.clearStages(), afterUpdate: () => opps.clearStages(), afterDelete: () => opps.clearStages(),
   validate(ctx, v) { const e = []; if (!(v.probability >= 0 && v.probability <= 100)) e.push({ field: 'probability', message: 'Probability must be 0-100' }); return e; },
 });
+hooks.register('approval_processes', {
+  beforeValidate(ctx, v, existing) { if (!existing && !v.rules) v.rules = [{ name: 'Default approval', when: [], steps: [{ kind: 'manager', label: 'Line manager', seq: 1, fallback_role: 'ROL-SM' }] }]; },
+  validate(ctx, v, existing) {
+    const e = [];
+    if (existing && existing.status !== 'Draft' && JSON.stringify(v.rules) !== JSON.stringify(existing.rules)) e.push({ field: 'rules', message: 'Only Draft versions can be edited. Create a new version instead.' });
+    if (!Array.isArray(v.rules)) e.push({ field: 'rules', message: 'Rules must be a list' });
+    else for (const r of v.rules) { if (!r.name || !Array.isArray(r.steps) || !r.steps.length) { e.push({ field: 'rules', message: 'Each rule needs a name and at least one step' }); break; } }
+    return e;
+  },
+});
 hooks.register('teams', { validate(ctx, v, ex) { const e = []; if (ex && v.parent_id && Number(v.parent_id) === ex.id) e.push({ field: 'parent_id', message: 'A team cannot be its own parent' }); return e; } });
 
 module.exports = { router };

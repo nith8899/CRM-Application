@@ -1,0 +1,16 @@
+{
+  "name": "enterprise-crm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Enterprise CRM — React frontend, Node.js/Express backend, PostgreSQL database",
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "db:setup": "npm --prefix backend run setup",
+    "db:reset": "npm --prefix backend run reset",
+    "dev:api": "npm --prefix backend run dev",
+    "dev:web": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix backend start",
+    "test": "npm --prefix backend test"
+  }
+}

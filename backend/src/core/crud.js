@@ -200,7 +200,7 @@ async function entityMeta(e, ctx) {
     fields: e.fields.filter((f) => !f.sec || A.fieldAccess(ctx, f.sec).view).filter((f) => !(f.secret)).map((f) => ({
       name: f.name, label: f.label, type: f.type, req: !!f.req, list: !!f.list, search: !!f.search, readonly: !!(f.readonly || f.sys || (f.sec && !A.fieldAccess(ctx, f.sec).edit)),
       ref: f.ref, help: f.help, section: f.section, hide: !!f.hide, virtual: !!f.virtual, def: f.def, pwd: !!f.pwd,
-      options: f.type === 'select' ? picklistOptions(e, f, PL) : undefined, sensitive: f.sec || undefined,
+      options: f.type === 'select' ? picklistOptions(e, f, PL) : undefined, picklist: f.type === 'select' && typeof f.options === 'string' ? f.options : undefined, sensitive: f.sec || undefined,
     })),
   };
 }
@@ -314,7 +314,7 @@ router.post('/:key', wrap(async (req, res) => {
     if (e.prefix) values.number = await nextNumber(typeof e.prefix === 'function' ? e.prefix(values) : e.prefix, c);
     values.created_by = req.ctx.id; values.modified_by = req.ctx.id;
     if (!e.plain) values.data_source = values.data_source || 'UI';
-    const cols = Object.keys(values).filter((k) => !(e.fieldMap[k] && e.fieldMap[k].virtual) && (e.fieldMap[k] || ['number', 'created_by', 'modified_by', 'data_source', 'owner_id'].includes(k)));
+    const cols = Object.keys(values).filter((k) => !(e.fieldMap[k] && e.fieldMap[k].virtual) && (e.fieldMap[k] || ['number', 'created_by', 'modified_by', 'data_source', 'owner_id', ...(e.hookColumns || [])].includes(k)));
     const finalCols = e.plain ? cols.filter((k) => !['created_by', 'modified_by', 'data_source'].includes(k)) : cols;
     const vals = finalCols.map((k) => (e.fieldMap[k] && e.fieldMap[k].type === 'json' && values[k] != null ? JSON.stringify(values[k]) : values[k]));
     const { rows } = await c.query(
@@ -358,7 +358,7 @@ router.put('/:key/:id', wrap(async (req, res) => {
   const cols = Object.keys(values).filter((k) => e.fieldMap[k] && !e.fieldMap[k].virtual);
   const rec = await db.tx(async (c) => {
     if (h.beforeUpdate) await h.beforeUpdate(req.ctx, values, existing, c);
-    const upd = Object.keys(values).filter((k) => (e.fieldMap[k] && !e.fieldMap[k].virtual) || ['owner_id'].includes(k));
+    const upd = Object.keys(values).filter((k) => (e.fieldMap[k] && !e.fieldMap[k].virtual) || ['owner_id', ...(e.hookColumns || [])].includes(k));
     const sets = upd.map((k, i) => `${k} = $${i + 1}`);
     const vals = upd.map((k) => (e.fieldMap[k] && e.fieldMap[k].type === 'json' && values[k] != null ? JSON.stringify(values[k]) : values[k]));
     if (!e.plain) { sets.push(`modified_by = $${vals.length + 1}`, 'modified_at = now()', 'version = version + 1'); vals.push(req.ctx.id); }
