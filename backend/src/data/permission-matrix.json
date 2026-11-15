@@ -1,0 +1,1876 @@
+{
+ "roles": [
+  "ROL-ADM",
+  "ROL-CM",
+  "ROL-SD",
+  "ROL-SM",
+  "ROL-SE",
+  "ROL-AM",
+  "ROL-PSE",
+  "ROL-TE",
+  "ROL-SOP",
+  "ROL-FIN",
+  "ROL-PRC",
+  "ROL-MKT",
+  "ROL-CPM",
+  "ROL-AUD",
+  "ROL-EXT",
+  "ROL-ROE"
+ ],
+ "matrix": {
+  "M01": {
+   "ROL-ADM": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-CM": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-SD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-SM": {
+    "a": "V",
+    "s": "T",
+    "raw": "V/T"
+   },
+   "ROL-SE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-AM": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-PSE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-TE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-SOP": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-FIN": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-PRC": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-MKT": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-CPM": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-EXT": {
+    "a": "V",
+    "s": "R",
+    "raw": "V/R"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M02": {
+   "ROL-ADM": {
+    "a": "CDEGHIVX",
+    "s": "G",
+    "raw": "VCEDXIGH/G"
+   },
+   "ROL-CM": {
+    "a": "EGVX",
+    "s": "N",
+    "raw": "VEGX/N"
+   },
+   "ROL-SD": {
+    "a": "VX",
+    "s": "G",
+    "raw": "VX/G"
+   },
+   "ROL-SM": {
+    "a": "CEGHVX",
+    "s": "T",
+    "raw": "VCEGHX/T"
+   },
+   "ROL-SE": {
+    "a": "CESV",
+    "s": "O",
+    "raw": "VCES/O"
+   },
+   "ROL-AM": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-PSE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-SOP": {
+    "a": "CDEGIVX",
+    "s": "N",
+    "raw": "VCEDXIG/N"
+   },
+   "ROL-MKT": {
+    "a": "CDEGIVX",
+    "s": "G",
+    "raw": "VCEDXIG/G"
+   },
+   "ROL-CPM": {
+    "a": "CEGV",
+    "s": "N",
+    "raw": "VCEG/N"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-EXT": {
+    "a": "CV",
+    "s": "R",
+    "raw": "VC/R"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M03": {
+   "ROL-ADM": {
+    "a": "CDEGHIVX",
+    "s": "G",
+    "raw": "VCEDXIGH/G"
+   },
+   "ROL-CM": {
+    "a": "CEFGHVX",
+    "s": "N",
+    "raw": "VCEGHXF/N"
+   },
+   "ROL-SD": {
+    "a": "FVX",
+    "s": "G",
+    "raw": "VXF/G"
+   },
+   "ROL-SM": {
+    "a": "CEFGHVX",
+    "s": "T",
+    "raw": "VCEGHXF/T"
+   },
+   "ROL-SE": {
+    "a": "CEFV",
+    "s": "O",
+    "raw": "VCEF/O+T(read)"
+   },
+   "ROL-AM": {
+    "a": "CEFV",
+    "s": "O",
+    "raw": "VCEF/O"
+   },
+   "ROL-PSE": {
+    "a": "FV",
+    "s": "B",
+    "raw": "VF/B"
+   },
+   "ROL-TE": {
+    "a": "FV",
+    "s": "O",
+    "raw": "VF/O"
+   },
+   "ROL-SOP": {
+    "a": "CDEFGHIVX",
+    "s": "N",
+    "raw": "VCEDXIGHF/N"
+   },
+   "ROL-FIN": {
+    "a": "FV",
+    "s": "N",
+    "raw": "VF/N"
+   },
+   "ROL-PRC": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-MKT": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-CPM": {
+    "a": "CEFV",
+    "s": "N",
+    "raw": "VCEF/N"
+   },
+   "ROL-AUD": {
+    "a": "FV",
+    "s": "G",
+    "raw": "VF/G"
+   },
+   "ROL-EXT": {
+    "a": "V",
+    "s": "R",
+    "raw": "V/R"
+   },
+   "ROL-ROE": {
+    "a": "FV",
+    "s": "G",
+    "raw": "VF/G"
+   }
+  },
+  "M04": {
+   "ROL-ADM": {
+    "a": "CDEGHIVX",
+    "s": "G",
+    "raw": "VCEDXIGH/G"
+   },
+   "ROL-CM": {
+    "a": "CEFGVX",
+    "s": "N",
+    "raw": "VCEGXF/N"
+   },
+   "ROL-SD": {
+    "a": "FVX",
+    "s": "G",
+    "raw": "VXF/G"
+   },
+   "ROL-SM": {
+    "a": "CEFGVX",
+    "s": "T",
+    "raw": "VCEGXF/T"
+   },
+   "ROL-SE": {
+    "a": "CEFV",
+    "s": "O",
+    "raw": "VCEF/O"
+   },
+   "ROL-AM": {
+    "a": "CEFV",
+    "s": "O",
+    "raw": "VCEF/O"
+   },
+   "ROL-PSE": {
+    "a": "FV",
+    "s": "B",
+    "raw": "VF/B"
+   },
+   "ROL-TE": {
+    "a": "FV",
+    "s": "O",
+    "raw": "VF/O"
+   },
+   "ROL-SOP": {
+    "a": "CDEFIVX",
+    "s": "N",
+    "raw": "VCEDXIF/N"
+   },
+   "ROL-FIN": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-PRC": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-MKT": {
+    "a": "CEIVX",
+    "s": "G",
+    "raw": "VCEXI/G"
+   },
+   "ROL-CPM": {
+    "a": "CEFV",
+    "s": "N",
+    "raw": "VCEF/N"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-EXT": {
+    "a": "CEV",
+    "s": "R",
+    "raw": "VCE/R"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M05": {
+   "ROL-ADM": {
+    "a": "CDEGHIVX",
+    "s": "G",
+    "raw": "VCEDXIGH/G"
+   },
+   "ROL-CM": {
+    "a": "AFVX",
+    "s": "N",
+    "raw": "VAXF/N"
+   },
+   "ROL-SD": {
+    "a": "FVX",
+    "s": "G",
+    "raw": "VXF/G"
+   },
+   "ROL-SM": {
+    "a": "FV",
+    "s": "T",
+    "raw": "VF/T"
+   },
+   "ROL-SE": {
+    "a": "FV",
+    "s": "B",
+    "raw": "VF/B"
+   },
+   "ROL-AM": {
+    "a": "FV",
+    "s": "B",
+    "raw": "VF/B"
+   },
+   "ROL-PSE": {
+    "a": "V",
+    "s": "B",
+    "raw": "V/B"
+   },
+   "ROL-SOP": {
+    "a": "CEFIVX",
+    "s": "N",
+    "raw": "VCEXIF/N"
+   },
+   "ROL-FIN": {
+    "a": "AFV",
+    "s": "N",
+    "raw": "VAF/N"
+   },
+   "ROL-MKT": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-CPM": {
+    "a": "ACEFGHSVX",
+    "s": "N",
+    "raw": "VCESAGHXF/N"
+   },
+   "ROL-AUD": {
+    "a": "FV",
+    "s": "G",
+    "raw": "VF/G"
+   },
+   "ROL-EXT": {
+    "a": "EV",
+    "s": "R",
+    "raw": "VE(own profile)/R"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M06": {
+   "ROL-ADM": {
+    "a": "CDEHIVX",
+    "s": "G",
+    "raw": "VCEDXIH/G"
+   },
+   "ROL-CM": {
+    "a": "AFVX",
+    "s": "N",
+    "raw": "VAXF/N"
+   },
+   "ROL-SD": {
+    "a": "FVX",
+    "s": "G",
+    "raw": "VXF/G"
+   },
+   "ROL-SM": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-SE": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-AM": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-PSE": {
+    "a": "FV",
+    "s": "N",
+    "raw": "VF/N"
+   },
+   "ROL-TE": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-SOP": {
+    "a": "CEFIVX",
+    "s": "N",
+    "raw": "VCEXIF/N"
+   },
+   "ROL-FIN": {
+    "a": "AFV",
+    "s": "N",
+    "raw": "VAF/N"
+   },
+   "ROL-PRC": {
+    "a": "CEFV",
+    "s": "N",
+    "raw": "VCEF/N"
+   },
+   "ROL-MKT": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-CPM": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-AUD": {
+    "a": "FV",
+    "s": "G",
+    "raw": "VF/G"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M07": {
+   "ROL-ADM": {
+    "a": "CDEIVX",
+    "s": "G",
+    "raw": "VCEDXI/G"
+   },
+   "ROL-CM": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-SD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-SM": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-SE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-AM": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-PSE": {
+    "a": "FV",
+    "s": "G",
+    "raw": "VF/G"
+   },
+   "ROL-TE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-SOP": {
+    "a": "CEIVX",
+    "s": "N",
+    "raw": "VCEXI/N"
+   },
+   "ROL-FIN": {
+    "a": "EV",
+    "s": "N",
+    "raw": "VE(cost)/N"
+   },
+   "ROL-PRC": {
+    "a": "EV",
+    "s": "N",
+    "raw": "VE(cost)/N"
+   },
+   "ROL-MKT": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-CPM": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-EXT": {
+    "a": "V",
+    "s": "R",
+    "raw": "V(list price)/R"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M08": {
+   "ROL-ADM": {
+    "a": "CDEGHIVX",
+    "s": "G",
+    "raw": "VCEDXIGH/G"
+   },
+   "ROL-CM": {
+    "a": "CEFGHVX",
+    "s": "N",
+    "raw": "VCEGHXF/N"
+   },
+   "ROL-SD": {
+    "a": "FVX",
+    "s": "G",
+    "raw": "VXF/G"
+   },
+   "ROL-SM": {
+    "a": "CEFGHVX",
+    "s": "T",
+    "raw": "VCEGHXF/T"
+   },
+   "ROL-SE": {
+    "a": "CEFHSV",
+    "s": "O",
+    "raw": "VCESHF/O"
+   },
+   "ROL-AM": {
+    "a": "CEFHSV",
+    "s": "O",
+    "raw": "VCESHF/O"
+   },
+   "ROL-PSE": {
+    "a": "EFV",
+    "s": "O",
+    "raw": "VEF/O"
+   },
+   "ROL-TE": {
+    "a": "FV",
+    "s": "O",
+    "raw": "VF/O"
+   },
+   "ROL-SOP": {
+    "a": "EFGVX",
+    "s": "N",
+    "raw": "VEGXF/N"
+   },
+   "ROL-FIN": {
+    "a": "FV",
+    "s": "N",
+    "raw": "VF/N"
+   },
+   "ROL-PRC": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-MKT": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-CPM": {
+    "a": "CEFGV",
+    "s": "N",
+    "raw": "VCEGF/N"
+   },
+   "ROL-AUD": {
+    "a": "FV",
+    "s": "G",
+    "raw": "VF/G"
+   },
+   "ROL-EXT": {
+    "a": "CSV",
+    "s": "R",
+    "raw": "VCS/R"
+   },
+   "ROL-ROE": {
+    "a": "FV",
+    "s": "G",
+    "raw": "VF/G"
+   }
+  },
+  "M09": {
+   "ROL-ADM": {
+    "a": "CDEVX",
+    "s": "G",
+    "raw": "VCEDX/G"
+   },
+   "ROL-CM": {
+    "a": "AVX",
+    "s": "N",
+    "raw": "VAX/N"
+   },
+   "ROL-SD": {
+    "a": "VX",
+    "s": "G",
+    "raw": "VX/G"
+   },
+   "ROL-SM": {
+    "a": "SVX",
+    "s": "T",
+    "raw": "VSX/T"
+   },
+   "ROL-SE": {
+    "a": "CSV",
+    "s": "O",
+    "raw": "VCS/O"
+   },
+   "ROL-AM": {
+    "a": "CSV",
+    "s": "O",
+    "raw": "VCS/O"
+   },
+   "ROL-PSE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-SOP": {
+    "a": "CEFGSVX",
+    "s": "N",
+    "raw": "VCESGXF/N"
+   },
+   "ROL-FIN": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-CPM": {
+    "a": "ACEFGSVX",
+    "s": "N",
+    "raw": "VCESAGXF/N"
+   },
+   "ROL-AUD": {
+    "a": "FV",
+    "s": "G",
+    "raw": "VF/G"
+   },
+   "ROL-EXT": {
+    "a": "CSV",
+    "s": "R",
+    "raw": "VCS/R"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M10": {
+   "ROL-ADM": {
+    "a": "CDEV",
+    "s": "G",
+    "raw": "VCED/G"
+   },
+   "ROL-CM": {
+    "a": "CEGVX",
+    "s": "N",
+    "raw": "VCEGX/N"
+   },
+   "ROL-SD": {
+    "a": "VX",
+    "s": "G",
+    "raw": "VX/G"
+   },
+   "ROL-SM": {
+    "a": "CEGVX",
+    "s": "T",
+    "raw": "VCEGX/T"
+   },
+   "ROL-SE": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-AM": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-PSE": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-TE": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-SOP": {
+    "a": "CEVX",
+    "s": "N",
+    "raw": "VCEX/N"
+   },
+   "ROL-FIN": {
+    "a": "CV",
+    "s": "O",
+    "raw": "VC/O"
+   },
+   "ROL-PRC": {
+    "a": "CV",
+    "s": "O",
+    "raw": "VC/O"
+   },
+   "ROL-MKT": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-CPM": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-EXT": {
+    "a": "CEV",
+    "s": "R",
+    "raw": "VCE/R"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M11": {
+   "ROL-ADM": {
+    "a": "CDEV",
+    "s": "G",
+    "raw": "VCED/G"
+   },
+   "ROL-CM": {
+    "a": "CEVX",
+    "s": "N",
+    "raw": "VCEX/N"
+   },
+   "ROL-SD": {
+    "a": "VX",
+    "s": "G",
+    "raw": "VX/G"
+   },
+   "ROL-SM": {
+    "a": "CEVX",
+    "s": "T",
+    "raw": "VCEX/T"
+   },
+   "ROL-SE": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-AM": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-PSE": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-TE": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-SOP": {
+    "a": "CEV",
+    "s": "N",
+    "raw": "VCE/N"
+   },
+   "ROL-FIN": {
+    "a": "CV",
+    "s": "O",
+    "raw": "VC/O"
+   },
+   "ROL-PRC": {
+    "a": "CV",
+    "s": "O",
+    "raw": "VC/O"
+   },
+   "ROL-MKT": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-CPM": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-EXT": {
+    "a": "V",
+    "s": "R",
+    "raw": "V/R"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M12": {
+   "ROL-ADM": {
+    "a": "CDEV",
+    "s": "G",
+    "raw": "VCED/G"
+   },
+   "ROL-CM": {
+    "a": "FV",
+    "s": "N",
+    "raw": "VF/N"
+   },
+   "ROL-SD": {
+    "a": "FV",
+    "s": "G",
+    "raw": "VF/G"
+   },
+   "ROL-SM": {
+    "a": "FV",
+    "s": "T",
+    "raw": "VF/T"
+   },
+   "ROL-SE": {
+    "a": "FV",
+    "s": "O",
+    "raw": "VF/O"
+   },
+   "ROL-AM": {
+    "a": "FV",
+    "s": "O",
+    "raw": "VF/O"
+   },
+   "ROL-PSE": {
+    "a": "ACEFSV",
+    "s": "O",
+    "raw": "VCESAF/O"
+   },
+   "ROL-TE": {
+    "a": "CEFV",
+    "s": "O",
+    "raw": "VCEF/O"
+   },
+   "ROL-SOP": {
+    "a": "FV",
+    "s": "N",
+    "raw": "VF/N"
+   },
+   "ROL-FIN": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-PRC": {
+    "a": "FV",
+    "s": "O",
+    "raw": "VF/O"
+   },
+   "ROL-CPM": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-AUD": {
+    "a": "FV",
+    "s": "G",
+    "raw": "VF/G"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M13": {
+   "ROL-ADM": {
+    "a": "CDEVX",
+    "s": "G",
+    "raw": "VCEDX/G"
+   },
+   "ROL-CM": {
+    "a": "ACEFSVX",
+    "s": "N",
+    "raw": "VCESAXF/N"
+   },
+   "ROL-SD": {
+    "a": "AFVX",
+    "s": "G",
+    "raw": "VAXF/G"
+   },
+   "ROL-SM": {
+    "a": "ACEFSVX",
+    "s": "T",
+    "raw": "VCESAXF/T"
+   },
+   "ROL-SE": {
+    "a": "CEFSV",
+    "s": "O",
+    "raw": "VCESF/O"
+   },
+   "ROL-AM": {
+    "a": "CEFSV",
+    "s": "O",
+    "raw": "VCESF/O"
+   },
+   "ROL-PSE": {
+    "a": "FV",
+    "s": "O",
+    "raw": "VF/O"
+   },
+   "ROL-TE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-SOP": {
+    "a": "CEFSVX",
+    "s": "N",
+    "raw": "VCESXF/N"
+   },
+   "ROL-FIN": {
+    "a": "AFVX",
+    "s": "N",
+    "raw": "VAXF/N"
+   },
+   "ROL-PRC": {
+    "a": "EFV",
+    "s": "O",
+    "raw": "VEF(cost)/O"
+   },
+   "ROL-CPM": {
+    "a": "FV",
+    "s": "N",
+    "raw": "VF/N"
+   },
+   "ROL-AUD": {
+    "a": "FV",
+    "s": "G",
+    "raw": "VF/G"
+   },
+   "ROL-EXT": {
+    "a": "FV",
+    "s": "R",
+    "raw": "VF(issued only)/R"
+   },
+   "ROL-ROE": {
+    "a": "FV",
+    "s": "G",
+    "raw": "VF/G"
+   }
+  },
+  "M14": {
+   "ROL-ADM": {
+    "a": "CDEIVX",
+    "s": "G",
+    "raw": "VCEDXI/G"
+   },
+   "ROL-CM": {
+    "a": "AV",
+    "s": "N",
+    "raw": "VA/N"
+   },
+   "ROL-SD": {
+    "a": "AV",
+    "s": "G",
+    "raw": "VA/G"
+   },
+   "ROL-SM": {
+    "a": "V",
+    "s": "T",
+    "raw": "V(margin)/T"
+   },
+   "ROL-SE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(margin own)/O"
+   },
+   "ROL-AM": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(margin own)/O"
+   },
+   "ROL-SOP": {
+    "a": "CEIVX",
+    "s": "N",
+    "raw": "VCEXI/N"
+   },
+   "ROL-FIN": {
+    "a": "ACEIVX",
+    "s": "N",
+    "raw": "VCEAXI/N"
+   },
+   "ROL-PRC": {
+    "a": "CEV",
+    "s": "N",
+    "raw": "VCE(cost)/N"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M15": {
+   "ROL-ADM": {
+    "a": "CDEVK",
+    "s": "G",
+    "raw": "VCED(config)/G"
+   },
+   "ROL-CM": {
+    "a": "AV",
+    "s": "N",
+    "raw": "VA/N"
+   },
+   "ROL-SD": {
+    "a": "AV",
+    "s": "G",
+    "raw": "VA/G"
+   },
+   "ROL-SM": {
+    "a": "AV",
+    "s": "T",
+    "raw": "VA/T"
+   },
+   "ROL-SE": {
+    "a": "SV",
+    "s": "O",
+    "raw": "VS/O"
+   },
+   "ROL-AM": {
+    "a": "SV",
+    "s": "O",
+    "raw": "VS/O"
+   },
+   "ROL-PSE": {
+    "a": "ASV",
+    "s": "O",
+    "raw": "VSA/O"
+   },
+   "ROL-SOP": {
+    "a": "SV",
+    "s": "N",
+    "raw": "VS/N"
+   },
+   "ROL-FIN": {
+    "a": "AV",
+    "s": "N",
+    "raw": "VA/N"
+   },
+   "ROL-CPM": {
+    "a": "ASV",
+    "s": "N",
+    "raw": "VSA/N"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M16": {
+   "ROL-ADM": {
+    "a": "CDEV",
+    "s": "G",
+    "raw": "VCED/G"
+   },
+   "ROL-CM": {
+    "a": "CEGVX",
+    "s": "N",
+    "raw": "VCEGX/N"
+   },
+   "ROL-SD": {
+    "a": "VX",
+    "s": "G",
+    "raw": "VX/G"
+   },
+   "ROL-SM": {
+    "a": "CEGVX",
+    "s": "T",
+    "raw": "VCEGX/T"
+   },
+   "ROL-SE": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-AM": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-PSE": {
+    "a": "EV",
+    "s": "O",
+    "raw": "VE/O"
+   },
+   "ROL-TE": {
+    "a": "EV",
+    "s": "O",
+    "raw": "VE/O"
+   },
+   "ROL-SOP": {
+    "a": "CEVX",
+    "s": "N",
+    "raw": "VCEX/N"
+   },
+   "ROL-FIN": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-PRC": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-CPM": {
+    "a": "EV",
+    "s": "N",
+    "raw": "VE/N"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-EXT": {
+    "a": "V",
+    "s": "R",
+    "raw": "V/R"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M17": {
+   "ROL-ADM": {
+    "a": "CDEV",
+    "s": "G",
+    "raw": "VCED/G"
+   },
+   "ROL-CM": {
+    "a": "ACESVX",
+    "s": "N",
+    "raw": "VCESAX/N (targets)"
+   },
+   "ROL-SD": {
+    "a": "ACESVX",
+    "s": "G",
+    "raw": "VCESAX/G"
+   },
+   "ROL-SM": {
+    "a": "SV",
+    "s": "T",
+    "raw": "VS(team)/T"
+   },
+   "ROL-SE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)/O"
+   },
+   "ROL-AM": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)/O"
+   },
+   "ROL-PSE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)/O"
+   },
+   "ROL-SOP": {
+    "a": "CEIVX",
+    "s": "N",
+    "raw": "VCEXI/N"
+   },
+   "ROL-FIN": {
+    "a": "ACEVX",
+    "s": "N",
+    "raw": "VCEAX/N"
+   },
+   "ROL-CPM": {
+    "a": "CEV",
+    "s": "N",
+    "raw": "VCE(partner targets)/N"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-EXT": {
+    "a": "V",
+    "s": "R",
+    "raw": "V(own partner)/R"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M18": {
+   "ROL-ADM": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-CM": {
+    "a": "AESVX",
+    "s": "N",
+    "raw": "VESAX/N"
+   },
+   "ROL-SD": {
+    "a": "AVX",
+    "s": "G",
+    "raw": "VAX/G"
+   },
+   "ROL-SM": {
+    "a": "ESVX",
+    "s": "T",
+    "raw": "VESX/T"
+   },
+   "ROL-SE": {
+    "a": "ESV",
+    "s": "O",
+    "raw": "VES/O"
+   },
+   "ROL-AM": {
+    "a": "ESV",
+    "s": "O",
+    "raw": "VES/O"
+   },
+   "ROL-PSE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-SOP": {
+    "a": "VX",
+    "s": "N",
+    "raw": "VX/N"
+   },
+   "ROL-FIN": {
+    "a": "VX",
+    "s": "N",
+    "raw": "VX/N"
+   },
+   "ROL-CPM": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-EXT": {
+    "a": "V",
+    "s": "R",
+    "raw": "V/R"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M19": {
+   "ROL-ADM": {
+    "a": "CDEV",
+    "s": "G",
+    "raw": "VCED/G"
+   },
+   "ROL-CM": {
+    "a": "CEGVX",
+    "s": "N",
+    "raw": "VCEGX/N"
+   },
+   "ROL-SD": {
+    "a": "VX",
+    "s": "G",
+    "raw": "VX/G"
+   },
+   "ROL-SM": {
+    "a": "CEGVX",
+    "s": "T",
+    "raw": "VCEGX/T"
+   },
+   "ROL-SE": {
+    "a": "CEV",
+    "s": "O",
+    "raw": "VCE/O"
+   },
+   "ROL-AM": {
+    "a": "CEFGV",
+    "s": "O",
+    "raw": "VCEGF/O"
+   },
+   "ROL-PSE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-TE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-SOP": {
+    "a": "CEIVX",
+    "s": "N",
+    "raw": "VCEXI/N"
+   },
+   "ROL-FIN": {
+    "a": "V",
+    "s": "N",
+    "raw": "V/N"
+   },
+   "ROL-CPM": {
+    "a": "CEV",
+    "s": "N",
+    "raw": "VCE/N"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   },
+   "ROL-EXT": {
+    "a": "V",
+    "s": "R",
+    "raw": "V/R"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M20": {
+   "ROL-ADM": {
+    "a": "CDEV",
+    "s": "G",
+    "raw": "VCED/G"
+   },
+   "ROL-CM": {
+    "a": "CDEFV",
+    "s": "N",
+    "raw": "VCEDF/N"
+   },
+   "ROL-SD": {
+    "a": "FV",
+    "s": "G",
+    "raw": "VF/G"
+   },
+   "ROL-SM": {
+    "a": "CEFV",
+    "s": "T",
+    "raw": "VCEF/T"
+   },
+   "ROL-SE": {
+    "a": "CEFV",
+    "s": "O",
+    "raw": "VCEF/O"
+   },
+   "ROL-AM": {
+    "a": "CEFV",
+    "s": "O",
+    "raw": "VCEF/O"
+   },
+   "ROL-PSE": {
+    "a": "CEFV",
+    "s": "O",
+    "raw": "VCEF/O"
+   },
+   "ROL-TE": {
+    "a": "CEFV",
+    "s": "O",
+    "raw": "VCEF/O"
+   },
+   "ROL-SOP": {
+    "a": "CDEFV",
+    "s": "N",
+    "raw": "VCEDF/N"
+   },
+   "ROL-FIN": {
+    "a": "CFV",
+    "s": "N",
+    "raw": "VCF/N"
+   },
+   "ROL-PRC": {
+    "a": "CFV",
+    "s": "O",
+    "raw": "VCF/O"
+   },
+   "ROL-MKT": {
+    "a": "CFV",
+    "s": "O",
+    "raw": "VCF/O"
+   },
+   "ROL-CPM": {
+    "a": "CEFV",
+    "s": "N",
+    "raw": "VCEF/N"
+   },
+   "ROL-AUD": {
+    "a": "FV",
+    "s": "G",
+    "raw": "VF/G"
+   },
+   "ROL-EXT": {
+    "a": "CFV",
+    "s": "R",
+    "raw": "VCF/R"
+   },
+   "ROL-ROE": {
+    "a": "FV",
+    "s": "G",
+    "raw": "VF/G"
+   }
+  },
+  "M21": {
+   "ROL-ADM": {
+    "a": "CDEVK",
+    "s": "G",
+    "raw": "VCED(config)/G"
+   },
+   "ROL-CM": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)"
+   },
+   "ROL-SD": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)"
+   },
+   "ROL-SM": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)"
+   },
+   "ROL-SE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)"
+   },
+   "ROL-AM": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)"
+   },
+   "ROL-PSE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)"
+   },
+   "ROL-TE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)"
+   },
+   "ROL-SOP": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)"
+   },
+   "ROL-FIN": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)"
+   },
+   "ROL-PRC": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)"
+   },
+   "ROL-MKT": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)"
+   },
+   "ROL-CPM": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)"
+   },
+   "ROL-EXT": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)"
+   },
+   "ROL-ROE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V(own)"
+   }
+  },
+  "M22": {
+   "ROL-ADM": {
+    "a": "CDEVX",
+    "s": "G",
+    "raw": "VCEDX/G"
+   },
+   "ROL-CM": {
+    "a": "CEVX",
+    "s": "N",
+    "raw": "VCEX/N"
+   },
+   "ROL-SD": {
+    "a": "CEVX",
+    "s": "G",
+    "raw": "VCEX/G"
+   },
+   "ROL-SM": {
+    "a": "CVX",
+    "s": "T",
+    "raw": "VCX/T"
+   },
+   "ROL-SE": {
+    "a": "VX",
+    "s": "O",
+    "raw": "VX/O"
+   },
+   "ROL-AM": {
+    "a": "VX",
+    "s": "O",
+    "raw": "VX/O"
+   },
+   "ROL-PSE": {
+    "a": "VX",
+    "s": "O",
+    "raw": "VX/O"
+   },
+   "ROL-TE": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-SOP": {
+    "a": "CEVX",
+    "s": "N",
+    "raw": "VCEX/N"
+   },
+   "ROL-FIN": {
+    "a": "CEVX",
+    "s": "N",
+    "raw": "VCEX/N"
+   },
+   "ROL-PRC": {
+    "a": "V",
+    "s": "O",
+    "raw": "V/O"
+   },
+   "ROL-MKT": {
+    "a": "CVX",
+    "s": "G",
+    "raw": "VCX/G"
+   },
+   "ROL-CPM": {
+    "a": "CVX",
+    "s": "N",
+    "raw": "VCX/N"
+   },
+   "ROL-AUD": {
+    "a": "VX",
+    "s": "G",
+    "raw": "VX/G"
+   },
+   "ROL-EXT": {
+    "a": "V",
+    "s": "R",
+    "raw": "V/R"
+   },
+   "ROL-ROE": {
+    "a": "VX",
+    "s": "G",
+    "raw": "VX/G"
+   }
+  },
+  "M23": {
+   "ROL-ADM": {
+    "a": "IVX",
+    "s": "G",
+    "raw": "VIX/G"
+   },
+   "ROL-CM": {
+    "a": "X",
+    "s": "N",
+    "raw": "X/N"
+   },
+   "ROL-SD": {
+    "a": "X",
+    "s": "G",
+    "raw": "X/G"
+   },
+   "ROL-SM": {
+    "a": "X",
+    "s": "T",
+    "raw": "X/T"
+   },
+   "ROL-SOP": {
+    "a": "IVX",
+    "s": "N",
+    "raw": "VIX/N"
+   },
+   "ROL-FIN": {
+    "a": "X",
+    "s": "N",
+    "raw": "X/N"
+   },
+   "ROL-MKT": {
+    "a": "IX",
+    "s": "G",
+    "raw": "IX(leads)/G"
+   },
+   "ROL-CPM": {
+    "a": "I",
+    "s": "N",
+    "raw": "I(partners)/N"
+   },
+   "ROL-AUD": {
+    "a": "X",
+    "s": "G",
+    "raw": "X/G"
+   },
+   "ROL-ROE": {
+    "a": "X",
+    "s": "G",
+    "raw": "X/G"
+   }
+  },
+  "M24": {
+   "ROL-ADM": {
+    "a": "CDEV",
+    "s": "G",
+    "raw": "VCED/G"
+   },
+   "ROL-SOP": {
+    "a": "V",
+    "s": "N",
+    "raw": "V(picklists)/N"
+   },
+   "ROL-FIN": {
+    "a": "EV",
+    "s": "G",
+    "raw": "VE(FX, tax)/G"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M25": {
+   "ROL-ADM": {
+    "a": "CDEV",
+    "s": "G",
+    "raw": "VCED/G"
+   },
+   "ROL-SOP": {
+    "a": "V",
+    "s": "N",
+    "raw": "V(logs)/N"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V/G"
+   }
+  },
+  "M26": {
+   "ROL-ADM": {
+    "a": "CEVK",
+    "s": "G",
+    "raw": "VCE(config)/G"
+   },
+   "ROL-CM": {
+    "a": "V",
+    "s": "N",
+    "raw": "V(audit)/N"
+   },
+   "ROL-SD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V(audit)/G"
+   },
+   "ROL-SOP": {
+    "a": "V",
+    "s": "N",
+    "raw": "V(audit)/N"
+   },
+   "ROL-FIN": {
+    "a": "V",
+    "s": "N",
+    "raw": "V(audit)/N"
+   },
+   "ROL-AUD": {
+    "a": "VX",
+    "s": "G",
+    "raw": "VX/G"
+   }
+  },
+  "M28": {
+   "ROL-ADM": {
+    "a": "K",
+    "s": "G",
+    "raw": "config/G"
+   },
+   "ROL-CM": {
+    "a": "U",
+    "s": "N",
+    "raw": "Use/N"
+   },
+   "ROL-SD": {
+    "a": "U",
+    "s": "G",
+    "raw": "Use/G"
+   },
+   "ROL-SM": {
+    "a": "U",
+    "s": "T",
+    "raw": "Use/T"
+   },
+   "ROL-SE": {
+    "a": "U",
+    "s": "O",
+    "raw": "Use/O"
+   },
+   "ROL-AM": {
+    "a": "U",
+    "s": "O",
+    "raw": "Use/O"
+   },
+   "ROL-PSE": {
+    "a": "U",
+    "s": "O",
+    "raw": "Use/O"
+   },
+   "ROL-TE": {
+    "a": "U",
+    "s": "O",
+    "raw": "Use/O"
+   },
+   "ROL-SOP": {
+    "a": "U",
+    "s": "N",
+    "raw": "Use/N"
+   },
+   "ROL-FIN": {
+    "a": "U",
+    "s": "N",
+    "raw": "Use/N"
+   },
+   "ROL-MKT": {
+    "a": "U",
+    "s": "O",
+    "raw": "Use/O"
+   },
+   "ROL-CPM": {
+    "a": "U",
+    "s": "O",
+    "raw": "Use/O"
+   },
+   "ROL-AUD": {
+    "a": "V",
+    "s": "G",
+    "raw": "V(AI logs)/G"
+   },
+   "ROL-EXT": {
+    "a": "",
+    "s": "O",
+    "raw": "— **[OQ-019]**"
+   },
+   "ROL-ROE": {
+    "a": "U",
+    "s": "G",
+    "raw": "Use/G"
+   }
+  }
+ }
+}
