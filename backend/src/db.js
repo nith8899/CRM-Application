@@ -6,7 +6,8 @@ types.setTypeParser(1700, (v) => (v === null ? null : parseFloat(v)));
 types.setTypeParser(20, (v) => (v === null ? null : parseInt(v, 10)));
 types.setTypeParser(1082, (v) => v);
 
-const pool = new Pool({ ...config.db, max: 20 });
+// All CRM objects live in their own schema so an existing database (e.g. a shared local 'postgres') is never touched.
+const pool = new Pool({ ...config.db, max: 20, options: `-c search_path=${config.schema},public` });
 pool.on('error', (e) => console.error('PG pool error', e.message));
 
 const query = (text, params) => pool.query(text, params);

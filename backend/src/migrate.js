@@ -18,6 +18,7 @@ function defaultSql(f) {
 }
 
 async function run() {
+  await db.query(`CREATE SCHEMA IF NOT EXISTS ${require('./config').schema}`);
   await db.query(fs.readFileSync(path.join(__dirname, '..', 'sql', '001_core.sql'), 'utf8'));
   const fks = [];
   const idx = [];

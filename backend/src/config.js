@@ -12,5 +12,6 @@ module.exports = {
     user: process.env.PGUSER || 'postgres',
     password: process.env.PGPASSWORD || '123456',
   },
+  schema: process.env.PGSCHEMA || 'crm',
   baseCurrency: process.env.BASE_CURRENCY || 'USD',
 };

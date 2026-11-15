@@ -53,7 +53,7 @@ The login page has one-click buttons for each role.
 Environment variables (all optional — defaults match the credentials above): see `backend/.env.example`
 (`PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, `PORT`, `JWT_SECRET`, `DEMO_PASSWORD`, `SEED_DEMO=0` to skip demo data).
 
-Useful commands: `npm run db:reset` (⚠ drops and recreates everything — dev only), `npm test` (resets the DB, runs 18 end-to-end suites).
+All tables live in their own `crm` schema inside the `postgres` database (override with `PGSCHEMA`), so an existing database is never touched. Useful commands: `npm run db:reset` (⚠ drops and recreates only the `crm` schema — dev only), `npm test` (resets the DB, runs 18 end-to-end suites).
 
 ---
 
