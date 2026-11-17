@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Icon } from '../components/icons';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth, useAsync, useToast } from '../state';
@@ -31,7 +32,7 @@ export function ClaimPage() {
       {c.status === 'Returned' && <Alert kind="warn">This claim was returned for changes. Update it and re-submit.</Alert>}
       {c._pending_step && <Alert kind="info">Waiting for: <b>{c._pending_step}</b>. Approval and payment are tracked separately.</Alert>}
       {c._flags?.length > 0 && <Alert kind="warn"><b>Policy flags</b><ul>{c._flags.map((f, i) => <li key={i}>{f}</li>)}</ul></Alert>}
-      <div className="grid g4" style={{ marginBottom: 14 }}>
+      <div className="grid g4" style={{ marginBottom: 'var(--sp-6)' }}>
         <div className="card kpi"><div className="label">Claimed</div><div className="value mono">{fmtMoney(c.total_amount, c.currency)}</div></div>
         <div className="card kpi"><div className="label">Approved amount</div><div className="value mono">{['Approved', 'Pending finance verification'].includes(stage) || c.payment_status !== 'Not ready' ? fmtMoney(c.approved_amount, c.currency) : '—'}</div></div>
         <div className="card kpi"><div className="label">Claim date</div><div className="value" style={{ fontSize: 18 }}>{fmtDate(c.claim_date)}</div></div>
@@ -40,11 +41,11 @@ export function ClaimPage() {
       <Card title="Expense lines" actions={finvPending && !adj && <button className="btn primary sm" onClick={startAdjust}>Finance adjustment…</button>}>
         <div className="table-wrap"><table className="t"><thead><tr><th>Date</th><th>Category</th><th>Merchant / description</th><th className="num">Amount</th><th className="num">Claim ccy</th><th>Receipt</th><th className="num">Approved</th>{adj && <th>Adjust reason</th>}<th /></tr></thead>
           <tbody>{lines.map((l) => (
-            <tr key={l.id}><td>{fmtDate(l.expense_date)}</td><td>{l.category_name}</td><td>{l.merchant && <b>{l.merchant}</b>} {l.description}{l.attendees && <div className="muted small">Attendees: {l.attendees}</div>}{(l.policy_flags || []).map((f) => <div key={f} className="err">⚠ {f}</div>)}</td>
-              <td className="num mono">{fmtMoney(l.amount, l.currency)}</td><td className="num mono">{fmtMoney(l.claim_amount)}</td><td>{l.receipt_attached ? '✓' : <span className="err">missing</span>}</td>
+            <tr key={l.id}><td>{fmtDate(l.expense_date)}</td><td>{l.category_name}</td><td>{l.merchant && <b>{l.merchant}</b>} {l.description}{l.attendees && <div className="muted small">Attendees: {l.attendees}</div>}{(l.policy_flags || []).map((f) => <div key={f} className="err row gap-sm"><Icon name="warning" size={16} />{f}</div>)}</td>
+              <td className="num mono">{fmtMoney(l.amount, l.currency)}</td><td className="num mono">{fmtMoney(l.claim_amount)}</td><td>{l.receipt_attached ? <span className="row gap-sm" style={{ color: 'var(--status-good-fg)' }}><Icon name="success" size={16} />Attached</span> : <span className="err row gap-sm"><Icon name="error" size={16} />Missing</span>}</td>
               <td className="num mono">{adj ? <input type="number" min="0" max={l.claim_amount} step="0.01" aria-label="Approved amount" style={{ width: 90 }} value={adj[l.id].amount} onChange={(e) => setAdj({ ...adj, [l.id]: { ...adj[l.id], amount: e.target.value } })} /> : l.approved_amount != null ? fmtMoney(l.approved_amount) : '—'}{l.adjust_reason && !adj && <div className="muted small">{l.adjust_reason}</div>}</td>
               {adj && <td><input type="text" aria-label="Adjustment reason" value={adj[l.id].reason} onChange={(e) => setAdj({ ...adj, [l.id]: { ...adj[l.id], reason: e.target.value } })} /></td>}
-              <td className="right nowrap">{editable && <><button className="btn sm" onClick={() => setLine(l)}>Edit</button> <button className="btn sm danger" onClick={async () => { await api.del(`/e/claim_lines/${l.id}`); load(); }}>✕</button></>}</td></tr>))}</tbody></table>
+              <td className="right nowrap">{editable && <><button className="btn sm" onClick={() => setLine(l)}>Edit</button> <button className="btn sm danger" aria-label="Delete line" onClick={async () => { await api.del(`/e/claim_lines/${l.id}`); load(); }}><Icon name="close" size={16} /></button></>}</td></tr>))}</tbody></table>
           {lines.length === 0 && <div className="empty">No expense lines yet.</div>}</div>
         {adj && <div className="row" style={{ justifyContent: 'flex-end', marginTop: 10 }}><button className="btn" onClick={() => setAdj(null)}>Cancel</button><button className="btn primary" onClick={saveAdjust}>Save adjustments</button></div>}
         {finvPending && <div className="help" style={{ marginTop: 8 }}>Verify receipts and amounts, adjust where policy requires, then approve the “Finance verification” step from the approval route.</div>}

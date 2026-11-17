@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { api, getToken, setToken, setUnauthorizedHandler } from './api';
+import { Icon } from './components/icons';
 
 const AuthCtx = createContext(null);
 export const useAuth = () => useContext(AuthCtx);
@@ -33,7 +34,7 @@ export function ToastProvider({ children }) {
   return (
     <ToastCtx.Provider value={push}>
       {children}
-      <div className="toasts" role="status" aria-live="polite">{items.map((t) => <div key={t.id} className={`toast ${t.kind}`}>{t.message}</div>)}</div>
+      <div className="toasts" role="status" aria-live="polite">{items.map((t) => <div key={t.id} className={`toast ${t.kind}`}><Icon name={t.kind === 'error' ? 'error' : t.kind === 'success' ? 'success' : 'info'} /><span>{t.message}</span></div>)}</div>
     </ToastCtx.Provider>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Icon } from '../components/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAsync, useAuth, useToast } from '../state';
@@ -20,7 +21,7 @@ export function CalendarPage() {
     if (!data) return m;
     data.meetings.forEach((x) => add(key(new Date(x.start_at)), { t: 'mtg', label: `${new Date(x.start_at).toTimeString().slice(0, 5)} ${x.subject}`, to: `/meetings/${x.id}` }));
     data.tasks.forEach((x) => add(key(new Date(x.due_at)), { t: 'task', label: `☑ ${x.subject}`, to: `/tasks/${x.id}` }));
-    data.events.forEach((x) => add(key(new Date(x.start_at)), { t: 'mtg', label: `★ ${x.name}`, to: `/events/${x.id}` }));
+    data.events.forEach((x) => add(key(new Date(x.start_at)), { t: 'mtg', label: `Event · ${x.name}`, to: `/events/${x.id}` }));
     data.company.forEach((c) => { const s = new Date(c.start_date); const e = new Date(c.end_date); for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) add(key(d), { t: 'hol', label: c.title, nonworking: c.non_working }); });
     return m;
   }, [data]);
@@ -60,7 +61,7 @@ export function MyWorkPage() {
             <table className="t"><tbody>{rows.map((t) => <tr key={t.id}><td style={{ width: 40 }}><input type="checkbox" aria-label={`Complete ${t.subject}`} onChange={() => complete(t)} /></td><td><Link to={`/tasks/${t.id}`}>{t.subject}</Link>{t.related_label && <div className="muted small">{t.related_label}</div>}{t.auto_generated && <span className="badge info" style={{ marginLeft: 6 }}>auto</span>}</td><td><Badge v={t.priority} /></td><td><Badge v={t.status} /></td><td className={name === 'Overdue' ? 'err nowrap' : 'nowrap'}>{fmtDateTime(t.due_at)}</td><td>{t.escalation_status !== 'None' && <Badge v="High">{t.escalation_status}</Badge>}</td></tr>)}</tbody></table>
           </Card>
         ))}
-        {!loading && open.length === 0 && <div className="empty">You have no open tasks. 🎉</div>}
+        {!loading && open.length === 0 && <div className="empty"><Icon name="success" weight="duotone" />You have no open tasks.</div>}
       </div>
       {show && <FormModal entity="tasks" onClose={() => setShow(false)} onSaved={() => setKey((k) => k + 1)} />}
     </>

@@ -13,7 +13,7 @@ export function AdminOverview() {
   return (
     <>
       <PageHead title="Administration" sub="System health, security signals and configuration entry points."><button className="btn" disabled={busy} onClick={async () => { setBusy(true); try { setJobs(await api.post('/admin/jobs/run')); toast('Background jobs executed', 'success'); reload(); } catch (e) { toast(e.message, 'error'); } finally { setBusy(false); } }}>Run background jobs now</button></PageHead>
-      <div className="grid g4" style={{ marginBottom: 14 }}>
+      <div className="grid g4" style={{ marginBottom: 'var(--sp-6)' }}>
         <K l="Active users" v={data.users.active} h={`${data.users.total} total · ${data.users.locked} locked`} to="/users" />
         <K l="Accounts / contacts" v={`${data.records.accounts} / ${data.records.contacts}`} h={`${data.records.opportunities} opportunities · ${data.records.leads} leads`} />
         <K l="Pending approvals" v={data.approvals_pending} h="across all workflows" to="/approvals" />
@@ -118,7 +118,7 @@ export function DataQualityPage() {
   return (
     <>
       <PageHead title="Data quality" sub="Data quality is the main adoption risk — review and resolve regularly (merge accounts from the account page)." />
-      <div className="grid g4" style={{ marginBottom: 14 }}><K l="Accounts missing tax ID" v={data.accounts_missing_tax_id} /><K l="Contacts without email" v={data.contacts_without_email} /><K l="Open deals past close date" v={data.open_opps_past_close} /><K l="Active products without cost" v={data.products_missing_cost} /><K l="Open deals with inactive owner" v={data.inactive_owner_records} /></div>
+      <div className="grid g4" style={{ marginBottom: 'var(--sp-6)' }}><K l="Accounts missing tax ID" v={data.accounts_missing_tax_id} /><K l="Contacts without email" v={data.contacts_without_email} /><K l="Open deals past close date" v={data.open_opps_past_close} /><K l="Active products without cost" v={data.products_missing_cost} /><K l="Open deals with inactive owner" v={data.inactive_owner_records} /></div>
       <div className="grid g2"><Card title="Duplicate account names" pad={false}><table className="t"><tbody>{data.duplicate_account_names.map((d) => <tr key={d.name}><td>{d.name}</td><td className="num">{d.n}</td></tr>)}</tbody></table>{data.duplicate_account_names.length === 0 && <div className="empty small">None found</div>}</Card><Card title="Duplicate contact emails" pad={false}><table className="t"><tbody>{data.duplicate_contact_emails.map((d) => <tr key={d.email}><td>{d.email}</td><td className="num">{d.n}</td></tr>)}</tbody></table>{data.duplicate_contact_emails.length === 0 && <div className="empty small">None found</div>}</Card></div>
     </>
   );

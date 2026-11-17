@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Icon } from '../components/icons';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth, useAsync, useToast } from '../state';
@@ -29,7 +30,7 @@ export function ApprovalsPage() {
             <td className="mono">{r.number}</td><td>{TYPE[r.process_type] || r.process_type}</td><td>{r.record_label}</td><td>{r.submitter_name}</td><td className="num">{r.amount != null ? fmtMoney(r.amount, r.currency) : '—'}</td>
             <td>{(r.steps || []).map((s) => <span key={s.id} title={`${s.label}: ${s.status}`} className={`badge ${s.status === 'Approved' ? 'good' : s.status === 'Pending' ? 'warn' : s.status === 'Rejected' ? 'bad' : ''}`} style={{ marginRight: 3 }}>{s.seq}</span>)}</td>
             <td><Badge v={r.status} /></td><td className="muted small">{fmtDateTime(r.submitted_at)}</td></tr>))}</tbody></table>
-        {loading && <Spinner />}{!loading && (data?.rows || []).length === 0 && <div className="empty">{view === 'pending' ? 'Nothing is waiting for your approval. 🎉' : 'No requests.'}</div>}</div></div>
+        {loading && <Spinner />}{!loading && (data?.rows || []).length === 0 && <div className="empty"><Icon name={view === 'pending' ? 'success' : 'inbox'} weight="duotone" />{view === 'pending' ? 'Nothing is waiting for your approval.' : 'No requests.'}</div>}</div></div>
     </>
   );
 }

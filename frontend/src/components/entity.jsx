@@ -1,4 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { Icon } from './icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, openAuthed, ApiError } from '../api';
 import { useAuth, useMeta, useToast, loadMeta } from '../state';
@@ -18,7 +19,7 @@ export function renderValue(f, row, meta) {
     case 'pct': return <span className="mono">{fmtPct(v)}</span>;
     case 'date': return fmtDate(v);
     case 'datetime': return fmtDateTime(v);
-    case 'bool': return v ? '✓' : '—';
+    case 'bool': return v ? 'Yes' : 'No';
     case 'json': return <span className="muted small">{Array.isArray(v) ? `${v.length} item(s)` : '{…}'}</span>;
     case 'select': { const lbl = (f.picklist && meta?.labels?.[`${f.picklist}:${v}`]) || v; return f.name === 'status' || /status|stage|priority|outcome/.test(f.name) ? <Badge v={v}>{lbl}</Badge> : lbl; }
     case 'url': return <a href={v} target="_blank" rel="noreferrer">{v}</a>;
@@ -78,7 +79,7 @@ export function EntityTable({ entity, filters = {}, columns, embedded, onNew, re
       <ErrorBox error={err} />
       <div className="table-wrap">
         <table className="t">
-          <thead><tr>{cols.map((f) => <th key={f.name} className={`sortable ${['money', 'int', 'decimal', 'pct'].includes(f.type) ? 'num' : ''}`} onClick={() => setSort(sort && sort.name === f.name ? { name: f.name, dir: sort.dir === 'asc' ? 'desc' : 'asc' } : { name: f.name, dir: 'asc' })} aria-sort={sort && sort.name === f.name ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>{f.label}{sort && sort.name === f.name ? (sort.dir === 'asc' ? ' ▲' : ' ▼') : ''}</th>)}</tr></thead>
+          <thead><tr>{cols.map((f) => <th key={f.name} className={`sortable ${['money', 'int', 'decimal', 'pct'].includes(f.type) ? 'num' : ''}`} onClick={() => setSort(sort && sort.name === f.name ? { name: f.name, dir: sort.dir === 'asc' ? 'desc' : 'asc' } : { name: f.name, dir: 'asc' })} aria-sort={sort && sort.name === f.name ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>{f.label}{sort && sort.name === f.name ? <Icon name={sort.dir === 'asc' ? 'sortAsc' : 'sortDesc'} size={16} /> : null}</th>)}</tr></thead>
           <tbody>
             {data.rows.map((r) => (
               <tr key={r.id} className="click" tabIndex={0} onClick={() => click(r)} onKeyDown={(e) => e.key === 'Enter' && click(r)}>

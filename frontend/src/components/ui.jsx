@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { badgeClass } from '../util';
+import { Icon } from './icons';
 
 export const Badge = ({ v, children }) => (v || children ? <span className={`badge ${badgeClass(v ?? children)}`}>{children ?? v}</span> : null);
-export const Spinner = ({ label = 'Loading…' }) => <div className="empty" role="status">{label}</div>;
-export const Alert = ({ kind = 'info', children }) => <div className={`alert ${kind}`} role={kind === 'bad' ? 'alert' : 'status'}>{children}</div>;
+export const Spinner = ({ label = 'Loading…' }) => <div className="empty" role="status"><span className="spinner" aria-hidden />{label}</div>;
+const ALERT_ICON = { bad: 'error', warn: 'warning', good: 'success', info: 'info' };
+export const Alert = ({ kind = 'info', children }) => <div className={`alert ${kind}`} role={kind === 'bad' ? 'alert' : 'status'}><Icon name={ALERT_ICON[kind] || 'info'} /><div className="alert-body">{children}</div></div>;
+export const Empty = ({ icon = 'inbox', children, small }) => <div className={`empty ${small ? 'small' : ''}`}><Icon name={icon} weight="duotone" />{children}</div>;
 
 export function ErrorBox({ error }) {
   if (!error) return null;
@@ -30,7 +33,7 @@ export function Modal({ title, onClose, children, footer, size = '' }) {
   return (
     <div className="overlay" onMouseDown={(e) => { if (e.target === e.currentTarget && onClose) onClose(); }}>
       <div className={`modal ${size}`} role="dialog" aria-modal="true" aria-label={title} ref={ref}>
-        <div className="modal-h"><h2>{title}</h2><button className="btn ghost sm" aria-label="Close" onClick={onClose}>✕</button></div>
+        <div className="modal-h"><h2>{title}</h2><button className="iconbtn" style={{ border: 0 }} aria-label="Close" onClick={onClose}><Icon name="close" /></button></div>
         <div className="modal-b">{children}</div>
         {footer && <div className="modal-f">{footer}</div>}
       </div>

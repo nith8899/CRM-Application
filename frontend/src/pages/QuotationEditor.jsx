@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Icon } from '../components/icons';
 import { Link, useParams } from 'react-router-dom';
 import { api, openAuthed } from '../api';
 import { useToast } from '../state';
@@ -123,7 +124,7 @@ export default function QuotationEditor() {
                       {can.see_margin && <><td className="num mono">{fmtMoney(c?.line_gp ?? l.line_gp)}</td><td className="num mono">{fmtPct(c?.line_gm_pct ?? l.line_gm_pct)}</td></>}
                       <td className="num">{l.tax_rate}</td>
                       <td>{editable ? <input type="checkbox" aria-label="Optional" checked={!!l.optional} onChange={(e) => setLine(l._k, { optional: e.target.checked, selected: !e.target.checked })} /> : l.optional ? 'opt' : ''}</td>
-                      {editable && <td><button className="btn sm ghost danger" aria-label="Remove line" onClick={() => { setLines(lines.filter((x) => x._k !== l._k)); setDirty(true); }}>✕</button></td>}
+                      {editable && <td><button className="btn sm ghost danger" aria-label="Remove line" onClick={() => { setLines(lines.filter((x) => x._k !== l._k)); setDirty(true); }}><Icon name="close" size={16} /></button></td>}
                     </tr>); })}
                 </tbody>
               </table>

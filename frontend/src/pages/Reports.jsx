@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { VIZ, AXIS, GRID, TIP } from '../components/chart';
 import { Link } from 'react-router-dom';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api, openAuthed } from '../api';
@@ -35,12 +36,12 @@ export function AnalyticsPage() {
   return (
     <>
       <PageHead title="Activity analytics" sub={`Effort versus outcomes since ${data.from}, scoped to your reporting line / team / organisation.`} />
-      <div className="grid g2" style={{ marginBottom: 14 }}>
-        <Card title="Activities by type"><div style={{ height: 260 }}><ResponsiveContainer><BarChart data={data.by_type}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="activity_type" tick={{ fontSize: 12 }} /><YAxis width={32} /><Tooltip /><Legend /><Bar dataKey="n" fill="#2563eb" name="Completed" radius={[4, 4, 0, 0]} /><Bar dataKey="positive" fill="#16a34a" name="Positive outcome" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></div></Card>
-        <Card title="Weekly activity volume"><div style={{ height: 260 }}><ResponsiveContainer><BarChart data={data.by_week}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="week" tick={{ fontSize: 11 }} /><YAxis width={32} /><Tooltip /><Bar dataKey="n" fill="#8b5cf6" name="Activities" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></div></Card>
+      <div className="grid g2" style={{ marginBottom: 'var(--sp-6)' }}>
+        <Card title="Activities by type"><div style={{ height: 260 }}><ResponsiveContainer><BarChart data={data.by_type}><CartesianGrid stroke={GRID} vertical={false} /><XAxis dataKey="activity_type" tick={AXIS} stroke={GRID} /><YAxis width={32} tick={AXIS} stroke={GRID} /><Tooltip cursor={{ fill: 'var(--bg-hover)' }} contentStyle={TIP} /><Legend wrapperStyle={{ fontSize: 13 }} /><Bar dataKey="n" fill="var(--viz-brand)" name="Completed" radius={[2, 2, 0, 0]} /><Bar dataKey="positive" fill="var(--viz-good)" name="Positive outcome" radius={[2, 2, 0, 0]} /></BarChart></ResponsiveContainer></div></Card>
+        <Card title="Weekly activity volume"><div style={{ height: 260 }}><ResponsiveContainer><BarChart data={data.by_week}><CartesianGrid stroke={GRID} vertical={false} /><XAxis dataKey="week" tick={AXIS} stroke={GRID} /><YAxis width={32} tick={AXIS} stroke={GRID} /><Tooltip cursor={{ fill: 'var(--bg-hover)' }} contentStyle={TIP} /><Bar dataKey="n" fill="var(--viz-1)" name="Activities" radius={[2, 2, 0, 0]} /></BarChart></ResponsiveContainer></div></Card>
       </div>
       <Card title="Effort vs outcome by person" pad={false}><table className="t"><thead><tr><th>Person</th><th className="num">Activities</th><th className="num">Opps touched</th><th className="num">Positive</th><th className="num">Deals won</th><th className="num">Won value</th></tr></thead><tbody>{data.by_user.map((u) => <tr key={u.name}><td>{u.name}</td><td className="num">{u.activities}</td><td className="num">{u.opportunities_touched}</td><td className="num">{u.positive}</td><td className="num">{u.outcomes.won}</td><td className="num mono">{fmtMoney(u.outcomes.won_value)}</td></tr>)}</tbody></table>
-        <div className="help" style={{ padding: 12 }}>High activity does not guarantee outcomes: this view keeps effort and results separate so managers coach rather than count (FR-ACTR).</div></Card>
+        <div className="help" style={{ padding: 'var(--sp-5) var(--sp-6)' }}>High activity does not guarantee outcomes: this view keeps effort and results separate so managers coach rather than count (FR-ACTR).</div></Card>
     </>
   );
 }

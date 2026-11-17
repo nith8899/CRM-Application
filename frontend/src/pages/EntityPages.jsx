@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Icon } from '../components/icons';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth, useMeta, useToast } from '../state';
@@ -79,7 +80,7 @@ function Detail({ entity, id }) {
       <PageHead title={<>{title} {status && <Badge v={status} />}</>} sub={<>{rec.number && rec.number !== title ? <span className="mono">{rec.number} · </span> : null}{meta.label}{rec.owner_id__label ? <> · Owner: <Link to={`/users/${rec.owner_id}`}>{rec.owner_id__label}</Link></> : null}{rec._lock?.locked === true ? <> · <Badge v="Blocked">🔒 {rec._lock.message}</Badge></> : null}</>}>
         {actions.map((a) => <button key={a.key} className="btn" onClick={() => setAct(a)}>{a.label}</button>)}
         {rec._can?.edit && <button className="btn" onClick={() => setEdit(true)}>Edit</button>}
-        {entity === 'opportunities' && can('M13', 'C') && rec.status === 'Open' && <button className="btn primary" onClick={() => setAddChild({ entity: 'quotations', quote: true })}>+ Quotation</button>}
+        {entity === 'opportunities' && can('M13', 'C') && rec.status === 'Open' && <button className="btn" onClick={() => setAddChild({ entity: 'quotations', quote: true })}><Icon name="add" size={16} />Quotation</button>}
         {rec._can?.delete && !meta.system && <button className="btn danger" onClick={() => setDel(true)}>Delete</button>}
       </PageHead>
 
@@ -141,17 +142,17 @@ function OpportunityPanel({ rec, reload }) {
         </div>
         <div className="row wrap" style={{ marginTop: 12 }}>
           <span><span className="muted small">Amount</span> <b className="mono">{fmtMoney(rec.amount, rec.currency)}</b></span>
-          <span><span className="muted small">Probability</span> <b>{rec.probability}%{rec.prob_overridden ? ' ✎' : ''}</b></span>
+          <span><span className="muted small">Probability</span> <b>{rec.probability}%{rec.prob_overridden ? <Icon name="edit" size={16} label="Manually overridden" style={{ verticalAlign: -2, marginLeft: 4 }} /> : ''}</b></span>
           <span><span className="muted small">Weighted</span> <b className="mono">{fmtMoney(rec.weighted_amount)}</b></span>
           <span><span className="muted small">Forecast</span> <Badge v={rec.forecast_category} /></span>
           <span><span className="muted small">Status</span> <Badge v={rec.status} /></span>
           {rec.status === 'On hold' && <span className="muted small">Review by {fmtDate(rec.review_date)}</span>}
           <div className="grow" />
-          {open && fwd.map((s) => <button key={s.code} className="btn primary sm" onClick={() => setDlg(s)}>Move to {s.name} ›</button>)}
+          {open && fwd.map((s, i) => <button key={s.code} className={`btn sm ${i === 0 ? 'primary' : ''}`} onClick={() => setDlg(s)}>Move to {s.name}<Icon name="next" size={16} /></button>)}
           {open && mgr && idx > 0 && <button className="btn sm" onClick={() => setDlg({ code: stages[Math.max(0, idx - 1)].code, name: stages[Math.max(0, idx - 1)].name, backwards: true })}>‹ Back one stage</button>}
           {open && next.some((s) => s.code === 'S12') && <button className="btn sm danger" onClick={() => setDlg(next.find((s) => s.code === 'S12'))}>Mark lost</button>}
           {open && next.some((s) => s.code === 'S13') && <button className="btn sm" onClick={() => setDlg(next.find((s) => s.code === 'S13'))}>Put on hold</button>}
-          {open && rec.stage === 'S10' && <button className="btn good sm" onClick={() => setDlg({ code: 'S11', name: 'Closed Won' })}>Mark won ✓</button>}
+          {open && rec.stage === 'S10' && <button className="btn accent sm" onClick={() => setDlg({ code: 'S11', name: 'Closed Won' })}><Icon name="check" size={16} />Mark won</button>}
           {rec.status === 'On hold' && <button className="btn primary sm" onClick={() => setAct({ key: 'resume', label: 'Resume from hold' })}>Resume</button>}
           {['Won', 'Lost', 'Cancelled'].includes(rec.status) && <button className="btn sm" onClick={() => setAct({ key: 'reopen', label: 'Reopen' })}>Reopen</button>}
           {open && <button className="btn sm" onClick={() => setAct({ key: 'set_probability', label: 'Override probability' })}>Probability…</button>}
@@ -162,7 +163,7 @@ function OpportunityPanel({ rec, reload }) {
       {flags.length > 0 && <Alert kind="warn"><b>Risk indicators:</b> {flags.map((f) => f.label).join(' · ')}</Alert>}
       {open && rec._stage_checklist?.length > 0 && <Alert kind="info"><b>To leave “{stages[idx]?.name}” you still need:</b><ul>{rec._stage_checklist.map((c, i) => <li key={i}>{c}</li>)}</ul></Alert>}
       {can('M28', 'U') && open && (
-        <div className="row wrap"><button className="btn sm" disabled={aiBusy} onClick={() => runAi('summary')}>✨ AI summary</button><button className="btn sm" disabled={aiBusy} onClick={() => runAi('next-actions')}>✨ Suggested next actions</button></div>
+        <div className="row wrap"><button className="btn sm" disabled={aiBusy} onClick={() => runAi('summary')}><Icon name="ai" size={16} />AI summary</button><button className="btn sm" disabled={aiBusy} onClick={() => runAi('next-actions')}><Icon name="ai" size={16} />Suggested next actions</button></div>
       )}
       {ai && <Alert kind="info"><div className="small muted">{ai.notice}</div>{ai.text && <p style={{ margin: '6px 0 0' }}>{ai.text}</p>}{ai.actions && <ul>{ai.actions.map((a, i) => <li key={i}><Badge v={a.priority} /> {a.action}</li>)}</ul>}</Alert>}
       {dlg && <StageDialog rec={rec} target={dlg} onClose={() => setDlg(null)} onDone={reload} />}

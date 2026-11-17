@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { VIZ, AXIS, GRID, TIP } from '../components/chart';
 import { Link } from 'react-router-dom';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api } from '../api';
@@ -24,13 +25,13 @@ export default function ForecastPage() {
       </PageHead>
       {loading || !data ? <Spinner /> : (
         <>
-          <div className="grid g4" style={{ marginBottom: 14 }}>
+          <div className="grid g4" style={{ marginBottom: 'var(--sp-6)' }}>
             <div className="card kpi"><div className="label">Closed won</div><div className="value">{fmtCompact(data.closed_won.amount)}</div><div className="hint">{data.closed_won.n} deals</div></div>
             {cats.map((c) => <div key={c.category} className="card kpi"><div className="label">{c.category}</div><div className="value">{fmtCompact(c.amount)}</div><div className="hint">{c.count} deals · weighted {fmtCompact(c.weighted)}</div></div>)}
           </div>
-          {data.accuracy && <div className="alert info" style={{ marginBottom: 14 }}>Accuracy vs “{data.accuracy.snapshot}”: committed {fmtMoney(data.accuracy.forecast_commit)}, won {fmtMoney(data.accuracy.actual_won)} → <b>{data.accuracy.pct ?? '—'}%</b></div>}
-          <div className="grid g2" style={{ marginBottom: 14 }}>
-            <Card title="By owner"><div style={{ height: 260 }}><ResponsiveContainer><BarChart data={data.by_owner}><CartesianGrid strokeDasharray="3 3" vertical={false} /><XAxis dataKey="owner_name" tick={{ fontSize: 11 }} /><YAxis tickFormatter={fmtCompact} width={48} tick={{ fontSize: 12 }} /><Tooltip formatter={(v) => fmtMoney(v)} /><Legend /><Bar dataKey="commit" stackId="a" fill="#16a34a" name="Commit" /><Bar dataKey="best_case" stackId="a" fill="#f59e0b" name="Best case" /><Bar dataKey="pipeline" stackId="a" fill="#94a3b8" name="Pipeline" /></BarChart></ResponsiveContainer></div></Card>
+          {data.accuracy && <div className="alert info" style={{ marginBottom: 'var(--sp-6)' }}>Accuracy vs “{data.accuracy.snapshot}”: committed {fmtMoney(data.accuracy.forecast_commit)}, won {fmtMoney(data.accuracy.actual_won)} → <b>{data.accuracy.pct ?? '—'}%</b></div>}
+          <div className="grid g2" style={{ marginBottom: 'var(--sp-6)' }}>
+            <Card title="By owner"><div style={{ height: 260 }}><ResponsiveContainer><BarChart data={data.by_owner}><CartesianGrid stroke={GRID} vertical={false} /><XAxis dataKey="owner_name" tick={AXIS} stroke={GRID} /><YAxis tickFormatter={fmtCompact} width={48} tick={AXIS} stroke={GRID} /><Tooltip cursor={{ fill: 'var(--bg-hover)' }} contentStyle={TIP} formatter={(v) => fmtMoney(v)} /><Legend wrapperStyle={{ fontSize: 13 }} /><Bar dataKey="commit" stackId="a" fill="var(--viz-brand)" name="Commit" /><Bar dataKey="best_case" stackId="a" fill="var(--viz-2)" name="Best case" /><Bar dataKey="pipeline" stackId="a" fill="var(--viz-6)" name="Pipeline" /></BarChart></ResponsiveContainer></div></Card>
             <Card title="Forecast submissions" pad={false}>
               <table className="t"><thead><tr><th>Owner</th><th className="num">Commit</th><th className="num">Best case</th><th className="num">System commit</th><th>Status</th></tr></thead><tbody>{data.submissions.map((s) => <tr key={s.id}><td><Link to={`/forecast_submissions/${s.id}`}>{s.owner_name}</Link></td><td className="num mono">{fmtMoney(s.commit_amount)}</td><td className="num mono">{fmtMoney(s.best_case_amount)}</td><td className="num mono muted">{fmtMoney(s.system_commit)}</td><td><Badge v={s.status} />{s.manager_adjustment ? <div className="small muted">adj {fmtMoney(s.manager_adjustment)}</div> : null}</td></tr>)}</tbody></table>
               {data.submissions.length === 0 && <div className="empty small">No submissions for this period.</div>}

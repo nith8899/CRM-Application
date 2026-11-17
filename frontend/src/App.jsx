@@ -14,6 +14,7 @@ import { ReportsPage, AnalyticsPage } from './pages/Reports';
 import { CalendarPage, MyWorkPage, OrgChartPage } from './pages/Work';
 import { AdminOverview, PermissionsPage, AuditPage, AppSettingsPage, DataQualityPage, OrgPage, IntegrationLogs } from './pages/Admin';
 import { MySettingsPage } from './pages/Settings';
+import DesignSystemPage from './pages/DesignSystem';
 
 function Protected({ children }) {
   const { me, loading } = useAuth(); const loc = useLocation();
@@ -51,6 +52,7 @@ export default function App() {
         <Route path="integrations/logs" element={<IntegrationLogs />} />
         <Route path="settings/app" element={<AppSettingsPage />} />
         <Route path="settings/me" element={<MySettingsPage />} />
+        <Route path="design-system" element={<DesignSystemPage />} />
         <Route path=":entity" element={<EntityListPage />} />
         <Route path=":entity/:id" element={<EntityDetailPage />} />
         <Route path="*" element={<div className="empty">Page not found.</div>} />
