@@ -3,7 +3,7 @@ import { Icon } from '../components/icons';
 import { Link, useParams } from 'react-router-dom';
 import { api, openAuthed } from '../api';
 import { useToast } from '../state';
-import { Alert, Badge, Card, ErrorBox, Modal, PageHead, Spinner } from '../components/ui';
+import { Alert, Badge, Card, ErrorBox, Modal, PageHead, Spinner, Empty } from '../components/ui';
 import { Lookup } from '../components/fields';
 import { fmtDate, fmtMoney, fmtPct, today } from '../util';
 
@@ -128,7 +128,7 @@ export default function QuotationEditor() {
                     </tr>); })}
                 </tbody>
               </table>
-              {dispLines.length === 0 && <div className="empty">No lines yet. Add products to build the quotation.</div>}
+              {dispLines.length === 0 && <Empty icon="quotations">No lines yet. Add products to build the quotation.</Empty>}
             </div>
             {editable && lines.some((l) => l.unit_cost == null && l.product_id) && can.see_cost && <Alert kind="warn">Some lines have no cost. Costs are required before submission (BRULE-QUO-003).</Alert>}
           </Card>

@@ -4,20 +4,24 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth, useMeta, useToast } from '../state';
 import { fmtDate, fmtDateTime, fmtMoney, fmtCompact, today, plusDays } from '../util';
-import { Alert, Badge, Card, Confirm, ErrorBox, KV, Modal, PageHead, Spinner, Tabs } from '../components/ui';
+import { ActionBar, Alert, Badge, Card, Confirm, Empty, ErrorBox, KV, Modal, PageHead, Segmented, Skeleton, Spinner, SummaryStrip, Tabs } from '../components/ui';
 import { ActionDialog, DocumentsPanel, EntityTable, FormModal, HistoryPanel, SharePanel, renderValue, visibleActions } from '../components/entity';
 import { FieldInput } from '../components/fields';
 
 // ------------------------------------------------------------------------ list
 export function EntityListPage() {
   const { entity } = useParams();
-  const { meta, error } = useMeta(entity); const nav = useNavigate(); const [show, setShow] = useState(false); const [key, setKey] = useState(0);
-  if (error) return <ErrorBox error={error} />; if (!meta) return <Spinner />;
+  const { meta, error } = useMeta(entity); const nav = useNavigate(); const [show, setShow] = useState(false); const [key] = useState(0); const [count, setCount] = useState(null);
+  if (error) return <ErrorBox error={error} />; if (!meta) return <Skeleton variant="page" />;
   const quote = entity === 'quotations';
+  const canCreate = meta.perms.C && (!meta.system || quote);
   return (
     <>
-      <PageHead title={meta.plural} sub={meta.system && !quote ? 'Records of this type are created by workflows.' : undefined} />
-      <EntityTable entity={entity} refreshKey={key} onNew={meta.perms.C && (!meta.system || quote) ? () => setShow(true) : undefined} />
+      <PageHead title={meta.plural} count={count} sub={meta.system && !quote ? 'Records of this type are created by workflows.' : undefined}>
+        {entity === 'opportunities' && <Segmented value="list" items={[{ key: 'list', label: 'List', icon: 'listView', to: '/opportunities' }, { key: 'board', label: 'Board', icon: 'boardView', to: '/pipeline' }]} />}
+        {canCreate && <button className="btn primary" onClick={() => setShow(true)}><Icon name="add" size={16} />New {meta.label.toLowerCase()}</button>}
+      </PageHead>
+      <EntityTable entity={entity} refreshKey={key} onCount={setCount} onNew={canCreate ? () => setShow(true) : undefined} />
       {show && (quote ? <CreateQuotationModal onClose={() => setShow(false)} /> : <FormModal entity={entity} onClose={() => setShow(false)} onSaved={(r) => nav(`/${entity}/${r.id}`)} />)}
     </>
   );
@@ -52,18 +56,26 @@ export function EntityDetailPage() {
   return <Detail key={`${entity}/${id}`} entity={entity} id={id} />;
 }
 
+// Fields the opportunity panel already shows (facts appear once).
+const OPP_PANEL = new Set(['amount', 'currency', 'probability', 'weighted_amount', 'forecast_category', 'status', 'stage', 'prob_overridden', 'close_date']);
+const SUMMARY_TYPES = ['money', 'date', 'pct'];
+
 function Detail({ entity, id }) {
   const { meta, error: me } = useMeta(entity); const { can } = useAuth(); const nav = useNavigate(); const toast = useToast();
   const [rec, setRec] = useState(null); const [err, setErr] = useState(null); const [tab, setTab] = useState('details'); const [edit, setEdit] = useState(false); const [act, setAct] = useState(null); const [del, setDel] = useState(false); const [addChild, setAddChild] = useState(null); const [key, setKey] = useState(0);
   const load = useCallback(() => api.get(`/e/${entity}/${id}`).then((r) => { setRec(r); setErr(null); }).catch(setErr), [entity, id]);
   useEffect(() => { load(); }, [load]);
-  if (me || err) return <ErrorBox error={me || err} />;
-  if (!meta || !rec) return <Spinner />;
+  if (me || err) return <ErrorBox error={me || err} retry={load} />;
+  if (!meta || !rec) return <Skeleton variant="page" />;
   const title = rec[meta.title] != null && meta.title !== 'id' ? String(rec[meta.title]) : rec.number || `${meta.label} #${rec.id}`;
   const status = meta.statusField ? rec[meta.statusField] : null;
-  const fields = meta.fields.filter((f) => !f.hide && !SKIP.has(f.name) && f.name !== meta.title);
+  const isOpp = entity === 'opportunities';
+  // Summary strip: owner + the first money/date/percent list fields (not for opportunities: their panel is the summary).
+  const summaryFields = isOpp ? [] : meta.fields.filter((f) => f.list && SUMMARY_TYPES.includes(f.type) && rec[f.name] != null && !rec[`${f.name}__masked`]).slice(0, 4);
+  const shown = new Set([meta.title, 'number', meta.statusField, ...(isOpp ? OPP_PANEL : []), ...summaryFields.map((f) => f.name), ...(rec.owner_id__label && !isOpp ? ['owner_id'] : [])]);
+  const fields = meta.fields.filter((f) => !f.hide && !SKIP.has(f.name) && !shown.has(f.name));
   const children = meta.children || [];
-  const tabs = [{ key: 'details', label: 'Details' }, ...children.map((c) => ({ key: `c:${c.entity}`, label: c.label, count: rec._counts?.[c.entity] })), ...(can('M20', 'V') ? [{ key: 'docs', label: 'Documents' }] : []), { key: 'history', label: 'History' }, ...(meta.perms.H ? [{ key: 'share', label: 'Sharing' }] : [])];
+  const tabs = [{ key: 'details', label: 'Overview' }, ...children.map((c) => ({ key: `c:${c.entity}`, label: c.label, count: rec._counts?.[c.entity] })), ...(can('M20', 'V') ? [{ key: 'docs', label: 'Documents' }] : []), { key: 'history', label: 'History' }, ...(meta.perms.H ? [{ key: 'share', label: 'Sharing' }] : [])];
   if (entity === 'approval_processes') tabs.splice(1, 0, { key: 'rules', label: 'Rules & simulation' });
   if (entity === 'users') tabs.splice(1, 0, { key: 'roles', label: 'Roles & access' });
   if (entity === 'deal_registrations' && rec.conflict_status !== 'None') tabs.splice(1, 0, { key: 'conflicts', label: 'Conflict case' });
@@ -73,38 +85,46 @@ function Detail({ entity, id }) {
 
   const afterChange = () => { load(); setKey((k) => k + 1); };
   const sections = []; let cur = null;
-  for (const f of fields) { const s = f.section || ''; if (!cur || cur.s !== s) { cur = { s, items: [] }; sections.push(cur); } cur.items.push(f); }
+  for (const f of fields) { const s = f.section || (cur ? cur.s : 'Details'); if (!cur || cur.s !== s) { cur = { s, items: [] }; sections.push(cur); } cur.items.push(f); }
+  // One primary (first workflow step, or Edit), one secondary, the rest under More; delete last.
+  const bar = [
+    ...actions.map((a) => ({ label: a.label, onClick: () => setAct(a), danger: /cancel|suspend|disqualify|anonymi|reject/i.test(a.key) })),
+    rec._can?.edit && { label: 'Edit', icon: 'edit', onClick: () => setEdit(true) },
+    isOpp && can('M13', 'C') && rec.status === 'Open' && { label: 'New quotation', icon: 'add', onClick: () => setAddChild({ entity: 'quotations', quote: true }) },
+    rec._can?.delete && !meta.system && { label: `Delete ${meta.label.toLowerCase()}`, danger: true, onClick: () => setDel(true) },
+  ].filter(Boolean).map((a, i) => (isOpp && !a.danger ? { ...a, kind: 'secondary' } : a));
 
   return (
     <>
-      <PageHead title={<>{title} {status && <Badge v={status} />}</>} sub={<>{rec.number && rec.number !== title ? <span className="mono">{rec.number} · </span> : null}{meta.label}{rec.owner_id__label ? <> · Owner: <Link to={`/users/${rec.owner_id}`}>{rec.owner_id__label}</Link></> : null}{rec._lock?.locked === true ? <> · <Badge v="Blocked">🔒 {rec._lock.message}</Badge></> : null}</>}>
-        {actions.map((a) => <button key={a.key} className="btn" onClick={() => setAct(a)}>{a.label}</button>)}
-        {rec._can?.edit && <button className="btn" onClick={() => setEdit(true)}>Edit</button>}
-        {entity === 'opportunities' && can('M13', 'C') && rec.status === 'Open' && <button className="btn" onClick={() => setAddChild({ entity: 'quotations', quote: true })}><Icon name="add" size={16} />Quotation</button>}
-        {rec._can?.delete && !meta.system && <button className="btn danger" onClick={() => setDel(true)}>Delete</button>}
+      <PageHead crumbs={[{ label: meta.plural, to: `/${entity}` }, { label: rec.number || title }]} eyebrow={meta.label}
+        title={<>{title} {status && <Badge v={status} />}{rec._lock?.locked === true && <Badge v="Blocked"><Icon name="lock" size={16} />{rec._lock.message}</Badge>}</>}
+        sub={<>{rec.number && rec.number !== title ? <span className="mono">{rec.number}</span> : null}{rec.number && rec.number !== title && rec.owner_id__label ? ' · ' : ''}{rec.owner_id__label ? <>Owner <Link to={`/users/${rec.owner_id}`}>{rec.owner_id__label}</Link></> : null}</>}>
+        <ActionBar actions={bar} />
       </PageHead>
 
-      {entity === 'opportunities' && <OpportunityPanel rec={rec} reload={afterChange} />}
+      {isOpp && <OpportunityPanel rec={rec} reload={afterChange} />}
+      {!isOpp && <SummaryStrip items={[
+        rec.owner_id__label && { k: 'Owner', v: <Link to={`/users/${rec.owner_id}`}>{rec.owner_id__label}</Link> },
+        ...summaryFields.map((f) => ({ k: f.label, v: renderValue(f, rec, meta) })),
+        { k: 'Last updated', v: fmtDate(rec.modified_at) },
+      ]} />}
       {entity === 'leads' && rec.status !== 'Converted' && rec.status !== 'Disqualified' && <Alert kind="info">Lead score <b>{rec.score}</b>/100. Qualify the lead against BANT-T criteria, then convert it to an account, contact and opportunity.</Alert>}
       {entity === 'leads' && rec.status === 'Converted' && <Alert kind="good">Converted → {rec.converted_account_id && <Link to={`/accounts/${rec.converted_account_id}`}>Account</Link>} {rec.converted_opportunity_id && <>· <Link to={`/opportunities/${rec.converted_opportunity_id}`}>Opportunity</Link></>}. Converted leads are read-only.</Alert>}
-      <div style={{ height: 12 }} />
+      <div style={{ height: 'var(--sp-5)' }} />
       <Tabs tabs={tabs} value={tab} onChange={setTab} />
 
       {tab === 'details' && (
         <div className="stack">
-          <Card>
-            {sections.map((s, i) => (
-              <div key={i} style={{ marginBottom: 18 }}>
-                {s.s && <h3 style={{ marginBottom: 8 }}>{s.s}</h3>}
-                <div className="kv">{s.items.map((f) => <div key={f.name} className={['longtext', 'json'].includes(f.type) ? 'full' : ''}><div className="k">{f.label}</div><div className="v">{renderValue(f, rec, meta)}</div></div>)}</div>
-              </div>
-            ))}
-            <div className="muted small">Created {fmtDateTime(rec.created_at)} · Modified {fmtDateTime(rec.modified_at)} · v{rec.version}</div>
-          </Card>
+          {sections.map((s) => (
+            <Card key={s.s} title={s.s}>
+              <KV items={s.items.map((f) => ({ k: f.label, v: renderValue(f, rec, meta), full: ['longtext', 'json'].includes(f.type) }))} />
+            </Card>
+          ))}
+          <div className="muted small">Created {fmtDateTime(rec.created_at)} · Last modified {fmtDateTime(rec.modified_at)} · Version {rec.version}</div>
           {entity === 'accounts' && rec._360 && <Account360 rec={rec} />}
-          {entity === 'partners' && rec._performance && <Card title="Partner performance"><div className="grid g3"><div><div className="muted small">Opportunities</div><b style={{ fontSize: 20 }}>{rec._performance.opportunities}</b></div><div><div className="muted small">Won value</div><b style={{ fontSize: 20 }}>{fmtMoney(rec._performance.won)}</b></div><div><div className="muted small">Open pipeline</div><b style={{ fontSize: 20 }}>{fmtMoney(rec._performance.open_pipeline)}</b></div></div></Card>}
+          {entity === 'partners' && rec._performance && <Card title="Partner performance"><div className="grid g3"><div><div className="muted small">Opportunities</div><b className="metric">{rec._performance.opportunities}</b></div><div><div className="muted small">Won value</div><b className="metric">{fmtMoney(rec._performance.won)}</b></div><div><div className="muted small">Open pipeline</div><b className="metric">{fmtMoney(rec._performance.open_pipeline)}</b></div></div></Card>}
           {entity === 'events' && rec._roi && <EventPanel rec={rec} reload={afterChange} />}
-          {entity === 'contracts' && <Alert kind="info">Renewal opportunities are created automatically {` `}when the contract is within the renewal lead window, or manually from the renewal record.</Alert>}
+          {entity === 'contracts' && <Alert kind="info">Renewal opportunities are created automatically when the contract is within the renewal lead window, or manually from the renewal record.</Alert>}
         </div>
       )}
       {tab === 'rules' && <RulesEditor rec={rec} reload={load} />}
@@ -118,7 +138,7 @@ function Detail({ entity, id }) {
 
       {edit && <FormModal entity={entity} record={rec} onClose={() => setEdit(false)} onSaved={afterChange} />}
       {act && <ActionDialog entity={entity} recordId={id} action={act} onClose={() => setAct(null)} onDone={(r) => { if (r && r.opportunity_id && act.key === 'create_opportunity') nav(`/opportunities/${r.opportunity_id}`); else if (act.key === 'convert' && r?.opportunity_id) nav(`/opportunities/${r.opportunity_id}`); else if (act.key === 'new_version' && r?.id) nav(`/${entity}/${r.id}`); else afterChange(); }} />}
-      {del && <Confirm danger title={`Delete ${meta.label.toLowerCase()}?`} message="This record will be soft-deleted and removed from lists. The deletion is audited." yesLabel="Delete" onNo={() => setDel(false)} onYes={async () => { try { await api.del(`/e/${entity}/${id}`); toast('Deleted', 'success'); nav(`/${entity}`); } catch (e) { toast(e.message, 'error'); setDel(false); } }} />}
+      {del && <Confirm danger title={`Delete this ${meta.label.toLowerCase()}?`} message={<><b>{title}</b> will be removed from lists and searches.</>} consequences={['The deletion is recorded in the audit log.', 'Linked records keep their history.']} undo="An administrator can restore it from the audit log." yesLabel={`Delete ${meta.label.toLowerCase()}`} onNo={() => setDel(false)} onYes={async () => { try { await api.del(`/e/${entity}/${id}`); toast(`${meta.label} deleted`, 'success'); nav(`/${entity}`); } catch (e) { toast(e.message, 'error'); setDel(false); } }} />}
       {addChild && (addChild.quote ? <CreateQuotationModal opportunity={rec} onClose={() => setAddChild(null)} /> : <FormModal entity={addChild.entity} defaults={{ [addChild.fk]: Number(id), [`${addChild.fk}`]: Number(id) }} onClose={() => setAddChild(null)} onSaved={afterChange} />)}
     </>
   );
@@ -131,40 +151,42 @@ function OpportunityPanel({ rec, reload }) {
   const stages = rec._stages || []; const idx = stages.findIndex((s) => s.code === rec.stage);
   const open = rec.status === 'Open'; const mgr = rec._is_manager;
   const next = (rec._next || []).map((c) => stages.find((s) => s.code === c)).filter(Boolean);
-  const fwd = next.filter((s) => !['S12', 'S13'].includes(s.code));
+  const fwd = next.filter((s) => !['S11', 'S12', 'S13'].includes(s.code));
+  const canWin = open && (rec.stage === 'S10' || next.some((s) => s.code === 'S11'));
   const flags = rec.risk_flags || [];
   const runAi = async (kind) => { setAiBusy(true); try { setAi(await api.get(`/ai/opportunity/${rec.id}/${kind}`)); } catch (e) { toast(e.message, 'error'); } finally { setAiBusy(false); } };
   return (
     <div className="stack">
       <Card>
         <div className="stages" role="list" aria-label="Pipeline stages">
-          {stages.filter((s) => !['S12', 'S13'].includes(s.code)).map((s, i) => <div key={s.code} role="listitem" className={`stage ${s.code === rec.stage ? 'cur' : (i < idx && s.code !== 'S11') || rec.status === 'Won' ? 'done' : ''}`}><b>{s.code} · {s.probability}%</b>{s.name}</div>)}
+          {stages.filter((s) => !['S12', 'S13'].includes(s.code)).map((s, i) => <div key={s.code} role="listitem" className={`stage ${s.code === rec.stage ? 'cur' : (i < idx && s.code !== 'S11') || rec.status === 'Won' ? 'done' : ''}`}><b>{s.probability}%</b>{s.name}</div>)}
         </div>
-        <div className="row wrap" style={{ marginTop: 12 }}>
-          <span><span className="muted small">Amount</span> <b className="mono">{fmtMoney(rec.amount, rec.currency)}</b></span>
-          <span><span className="muted small">Probability</span> <b>{rec.probability}%{rec.prob_overridden ? <Icon name="edit" size={16} label="Manually overridden" style={{ verticalAlign: -2, marginLeft: 4 }} /> : ''}</b></span>
-          <span><span className="muted small">Weighted</span> <b className="mono">{fmtMoney(rec.weighted_amount)}</b></span>
-          <span><span className="muted small">Forecast</span> <Badge v={rec.forecast_category} /></span>
-          <span><span className="muted small">Status</span> <Badge v={rec.status} /></span>
-          {rec.status === 'On hold' && <span className="muted small">Review by {fmtDate(rec.review_date)}</span>}
-          <div className="grow" />
-          {open && fwd.map((s, i) => <button key={s.code} className={`btn sm ${i === 0 ? 'primary' : ''}`} onClick={() => setDlg(s)}>Move to {s.name}<Icon name="next" size={16} /></button>)}
-          {open && mgr && idx > 0 && <button className="btn sm" onClick={() => setDlg({ code: stages[Math.max(0, idx - 1)].code, name: stages[Math.max(0, idx - 1)].name, backwards: true })}>‹ Back one stage</button>}
-          {open && next.some((s) => s.code === 'S12') && <button className="btn sm danger" onClick={() => setDlg(next.find((s) => s.code === 'S12'))}>Mark lost</button>}
-          {open && next.some((s) => s.code === 'S13') && <button className="btn sm" onClick={() => setDlg(next.find((s) => s.code === 'S13'))}>Put on hold</button>}
-          {open && rec.stage === 'S10' && <button className="btn accent sm" onClick={() => setDlg({ code: 'S11', name: 'Closed Won' })}><Icon name="check" size={16} />Mark won</button>}
-          {rec.status === 'On hold' && <button className="btn primary sm" onClick={() => setAct({ key: 'resume', label: 'Resume from hold' })}>Resume</button>}
-          {['Won', 'Lost', 'Cancelled'].includes(rec.status) && <button className="btn sm" onClick={() => setAct({ key: 'reopen', label: 'Reopen' })}>Reopen</button>}
-          {open && <button className="btn sm" onClick={() => setAct({ key: 'set_probability', label: 'Override probability' })}>Probability…</button>}
-          {open && <button className="btn sm" onClick={() => setAct({ key: 'set_forecast_category', label: 'Forecast category' })}>Forecast…</button>}
-          {open && <button className="btn sm ghost danger" onClick={() => setAct({ key: 'cancel', label: 'Cancel opportunity', prompt: 'reason' })}>Cancel deal</button>}
-        </div>
+        <SummaryStrip items={[
+          { k: 'Amount', v: <span className="mono">{fmtMoney(rec.amount, rec.currency)}</span> },
+          { k: 'Probability', v: <>{rec.probability}%{rec.prob_overridden ? <Icon name="edit" size={16} label="Manually overridden" style={{ verticalAlign: -2, marginLeft: 4 }} /> : ''}</> },
+          { k: 'Weighted', v: <span className="mono">{fmtMoney(rec.weighted_amount)}</span> },
+          { k: 'Forecast', v: <Badge v={rec.forecast_category} /> },
+          { k: 'Close date', v: fmtDate(rec.close_date) },
+          rec.status === 'On hold' && { k: 'Review by', v: fmtDate(rec.review_date) },
+        ]} />
+        <ActionBar actions={[
+          canWin && { label: 'Mark won', icon: 'check', kind: 'accent', onClick: () => setDlg({ code: 'S11', name: 'Closed Won' }) },
+          open && fwd[0] && { label: `Move to ${fwd[0].name}`, icon: 'next', kind: canWin ? 'secondary' : 'primary', onClick: () => setDlg(fwd[0]) },
+          rec.status === 'On hold' && { label: 'Resume', onClick: () => setAct({ key: 'resume', label: 'Resume from hold' }) },
+          ['Won', 'Lost', 'Cancelled'].includes(rec.status) && { label: 'Reopen', onClick: () => setAct({ key: 'reopen', label: 'Reopen' }) },
+          ...(open ? fwd.slice(1).map((s) => ({ label: `Move to ${s.name}`, onClick: () => setDlg(s) })) : []),
+          open && mgr && idx > 0 && { label: 'Move back one stage', onClick: () => setDlg({ code: stages[Math.max(0, idx - 1)].code, name: stages[Math.max(0, idx - 1)].name, backwards: true }) },
+          open && next.some((s) => s.code === 'S13') && { label: 'Put on hold', onClick: () => setDlg(next.find((s) => s.code === 'S13')) },
+          open && { label: 'Override probability…', onClick: () => setAct({ key: 'set_probability', label: 'Override probability' }) },
+          open && { label: 'Change forecast category…', onClick: () => setAct({ key: 'set_forecast_category', label: 'Forecast category' }) },
+          can('M28', 'U') && open && { label: 'AI summary', icon: 'ai', onClick: () => runAi('summary'), disabled: aiBusy },
+          can('M28', 'U') && open && { label: 'Suggested next actions', icon: 'ai', onClick: () => runAi('next-actions'), disabled: aiBusy },
+          open && next.some((s) => s.code === 'S12') && { label: 'Mark lost…', danger: true, onClick: () => setDlg(next.find((s) => s.code === 'S12')) },
+          open && { label: 'Cancel deal…', danger: true, onClick: () => setAct({ key: 'cancel', label: 'Cancel opportunity', prompt: 'reason' }) },
+        ]} />
       </Card>
       {flags.length > 0 && <Alert kind="warn"><b>Risk indicators:</b> {flags.map((f) => f.label).join(' · ')}</Alert>}
       {open && rec._stage_checklist?.length > 0 && <Alert kind="info"><b>To leave “{stages[idx]?.name}” you still need:</b><ul>{rec._stage_checklist.map((c, i) => <li key={i}>{c}</li>)}</ul></Alert>}
-      {can('M28', 'U') && open && (
-        <div className="row wrap"><button className="btn sm" disabled={aiBusy} onClick={() => runAi('summary')}><Icon name="ai" size={16} />AI summary</button><button className="btn sm" disabled={aiBusy} onClick={() => runAi('next-actions')}><Icon name="ai" size={16} />Suggested next actions</button></div>
-      )}
       {ai && <Alert kind="info"><div className="small muted">{ai.notice}</div>{ai.text && <p style={{ margin: '6px 0 0' }}>{ai.text}</p>}{ai.actions && <ul>{ai.actions.map((a, i) => <li key={i}><Badge v={a.priority} /> {a.action}</li>)}</ul>}</Alert>}
       {dlg && <StageDialog rec={rec} target={dlg} onClose={() => setDlg(null)} onDone={reload} />}
       {act && <ActionDialog entity="opportunities" recordId={rec.id} action={act} onClose={() => setAct(null)} onDone={reload} />}
@@ -203,7 +225,7 @@ function Account360({ rec }) {
   const d = rec._360;
   return (
     <Card title="Account 360°">
-      <div className="grid g3"><div><div className="muted small">Open opportunities</div><b style={{ fontSize: 20 }}>{d.open_opportunities}</b></div><div><div className="muted small">Open pipeline</div><b style={{ fontSize: 20 }}>{fmtMoney(d.open_pipeline)}</b></div><div><div className="muted small">Won to date</div><b style={{ fontSize: 20 }}>{fmtMoney(d.won_total)}</b></div></div>
+      <div className="grid g3"><div><div className="muted small">Open opportunities</div><b className="metric">{d.open_opportunities}</b></div><div><div className="muted small">Open pipeline</div><b className="metric">{fmtMoney(d.open_pipeline)}</b></div><div><div className="muted small">Won to date</div><b className="metric">{fmtMoney(d.won_total)}</b></div></div>
       {d.subsidiaries.length > 0 && <div style={{ marginTop: 12 }}><div className="muted small">Subsidiaries</div>{d.subsidiaries.map((s) => <Link key={s.id} to={`/accounts/${s.id}`} style={{ marginRight: 12 }}>{s.legal_name}</Link>)}</div>}
       {rec.credit_blocked && <Alert kind="bad">Credit blocked in ERP — quotations cannot be issued without Finance release.</Alert>}
     </Card>
@@ -214,7 +236,7 @@ function EventPanel({ rec, reload }) {
   const { me } = useAuth(); const toast = useToast(); const r = rec._roi; const [dietary, setDietary] = useState('');
   return (
     <Card title="Event results & ROI">
-      <div className="grid g4"><div><div className="muted small">Budget (base)</div><b style={{ fontSize: 20 }}>{fmtMoney(r.budget)}</b></div><div><div className="muted small">Actual cost (approved claims)</div><b style={{ fontSize: 20 }}>{fmtMoney(r.actual_cost)}</b></div><div><div className="muted small">Registered / attended</div><b style={{ fontSize: 20 }}>{rec.registered_count} / {rec.attended_count}</b></div><div><div className="muted small">Leads · pipeline influenced</div><b style={{ fontSize: 20 }}>{rec.leads_generated} · {fmtCompact(rec.pipeline_influenced)}</b></div></div>
+      <div className="grid g4"><div><div className="muted small">Budget (base)</div><b className="metric">{fmtMoney(r.budget)}</b></div><div><div className="muted small">Actual cost (approved claims)</div><b className="metric">{fmtMoney(r.actual_cost)}</b></div><div><div className="muted small">Registered / attended</div><b className="metric">{rec.registered_count} / {rec.attended_count}</b></div><div><div className="muted small">Leads · pipeline influenced</div><b className="metric">{rec.leads_generated} · {fmtCompact(rec.pipeline_influenced)}</b></div></div>
       {rec.status === 'Open for registration' && (
         <div className="row" style={{ marginTop: 14 }}><input type="text" placeholder="Dietary / accessibility needs (optional)" value={dietary} onChange={(e) => setDietary(e.target.value)} style={{ maxWidth: 320 }} /><button className="btn primary" onClick={async () => { try { const x = await api.post(`/events/${rec.id}/register`, { dietary }); toast(`You are ${x.status.toLowerCase()}`, 'success'); reload(); } catch (e) { toast(e.message, 'error'); } }}>Register myself</button></div>
       )}

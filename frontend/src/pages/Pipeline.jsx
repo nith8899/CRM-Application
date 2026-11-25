@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../state';
-import { Badge, ErrorBox, Modal, PageHead, Spinner } from '../components/ui';
+import { Badge, ErrorBox, Modal, PageHead, Segmented, Spinner } from '../components/ui';
 import { fmtCompact, fmtDate, fmtMoney } from '../util';
 
 export default function Pipeline() {
@@ -19,10 +19,10 @@ export default function Pipeline() {
   const match = (d) => !q || `${d.name} ${d.account_name} ${d.number}`.toLowerCase().includes(q.toLowerCase());
   return (
     <>
-      <PageHead title="Pipeline board" sub={`${data.stages.reduce((a, s) => a + s.items.length, 0)} open opportunities · ${fmtCompact(total)} total. Drag a card to change its stage — governance rules still apply.`}>
-        <input type="search" placeholder="Filter deals…" value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 200 }} aria-label="Filter deals" />
+      <PageHead title="Opportunities" sub={`${data.stages.reduce((a, s) => a + s.items.length, 0)} open opportunities · ${fmtCompact(total)} total. Drag a card to change its stage — governance rules still apply.`}>
+        <input type="search" placeholder="Filter deals…" value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 200 }} aria-label="Filter deals on the board" />
         <label className="row small"><input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> My deals</label>
-        <Link className="btn" to="/opportunities">List view</Link>
+        <Segmented value="board" items={[{ key: 'list', label: 'List', icon: 'listView', to: '/opportunities' }, { key: 'board', label: 'Board', icon: 'boardView', to: '/pipeline' }]} />
       </PageHead>
       <div className="kanban">
         {data.stages.map((s) => (

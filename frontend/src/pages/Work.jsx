@@ -36,7 +36,7 @@ export function CalendarPage() {
       <div className="cal" role="grid">
         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => <div key={d} className="h">{d}</div>)}
         {days.map((d) => { const k = key(d); const evs = byDay[k] || []; const off = evs.some((e) => e.nonworking) || d.getDay() === 0 || d.getDay() === 6;
-          return <div key={k} className={`d ${k === todayKey ? 'today' : ''} ${off ? 'off' : ''}`} style={{ opacity: d.getMonth() === month.getMonth() ? 1 : 0.5 }}><b className="small">{d.getDate()}</b>{evs.slice(0, 4).map((e, i) => (e.to ? <Link key={i} className={`ev ${e.t === 'task' ? 'task' : e.t === 'hol' ? 'hol' : ''}`} to={e.to} title={e.label}>{e.label}</Link> : <span key={i} className="ev hol" title={e.label}>{e.label}</span>))}{evs.length > 4 && <span className="muted small">+{evs.length - 4} more</span>}</div>; })}
+          return <div key={k} className={`d ${k === todayKey ? 'today' : ''} ${off ? 'off' : ''} ${d.getMonth() === month.getMonth() ? '' : 'out'}`}><b className="small">{d.getDate()}</b>{evs.slice(0, 4).map((e, i) => (e.to ? <Link key={i} className={`ev ${e.t === 'task' ? 'task' : e.t === 'hol' ? 'hol' : ''}`} to={e.to} title={e.label}>{e.label}</Link> : <span key={i} className="ev hol" title={e.label}>{e.label}</span>))}{evs.length > 4 && <span className="muted small">+{evs.length - 4} more</span>}</div>; })}
       </div>
       {show && <FormModal entity="meetings" onClose={() => setShow(false)} onSaved={(r) => nav(`/meetings/${r.id}`)} />}
     </>

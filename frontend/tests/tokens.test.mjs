@@ -27,15 +27,21 @@ function resolve(vars, name, seen = new Set()) {
   const ref = v.match(/^var\((--[\w-]+)\)$/);
   return ref ? resolve(vars, ref[1], seen) : v;
 }
-function rgb(hex) {
-  const h = hex.replace('#', '');
-  assert.match(h, /^[0-9a-fA-F]{6}$/, `expected a 6-digit hex, got ${hex}`);
-  return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+function parse(c) {
+  const m = c.match(/^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+)\s*)?\)$/);
+  if (m) return { rgb: [m[1], m[2], m[3]].map((x) => Number(x) / 255), a: m[4] == null ? 1 : Number(m[4]) };
+  const h = c.replace('#', '');
+  assert.match(h, /^[0-9a-fA-F]{6}$/, `expected a 6-digit hex or rgb(a), got ${c}`);
+  return { rgb: [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255), a: 1 };
 }
-const lum = (c) => { const [r, g, b] = rgb(c).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
-const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+// A translucent colour is measured as it actually appears: blended over the surface underneath.
+function over(top, base) { const t = parse(top), b = parse(base); assert.equal(b.a, 1, `base ${base} must be opaque`); return t.rgb.map((v, i) => v * t.a + b.rgb[i] * (1 - t.a)); }
+const rgb = (c, base) => (parse(c).a < 1 ? (assert.ok(base, `${c} is translucent; give a base surface`), over(c, base)) : parse(c).rgb);
+const lum = (c, base) => { const [r, g, b] = rgb(c, base).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+const ratio = (a, b, base) => { const bg = parse(b).a < 1 ? `rgb(${over(b, base).map((v) => Math.round(v * 255)).join(',')})` : b; const [x, y] = [lum(a, bg), lum(bg)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
 
-// [foreground, background, minimum] — 4.5 for text, 3 for UI boundaries and large text.
+// [foreground, background, minimum, base?] — 4.5 for text, 3 for UI boundaries and large text.
+// base: the opaque surface under a translucent background (hover layers, the active nav tint).
 const PAIRS = [
   ['--text-primary', '--bg-surface', 4.5], ['--text-primary', '--bg-app', 4.5], ['--text-secondary', '--bg-surface', 4.5],
   ['--text-secondary', '--bg-app', 4.5], ['--text-secondary', '--bg-subtle', 4.5], ['--text-disabled', '--bg-surface', 4.5],
@@ -43,16 +49,18 @@ const PAIRS = [
   ['--text-on-brand', '--action-primary', 4.5], ['--text-on-brand', '--action-primary-hover', 4.5], ['--text-on-accent', '--action-accent', 4.5],
   ['--status-good-fg', '--status-good-bg', 4.5], ['--status-warn-fg', '--status-warn-bg', 4.5], ['--status-bad-fg', '--status-bad-bg', 4.5],
   ['--status-info-fg', '--status-info-bg', 4.5], ['--status-neutral-fg', '--status-neutral-bg', 4.5],
-  ['--shell-nav-fg', '--shell-nav-bg', 4.5], ['--shell-nav-group', '--shell-nav-bg', 4.5], ['--shell-nav-active-fg', '--shell-nav-active-bg', 4.5],
+  ['--shell-nav-fg', '--shell-nav-bg', 4.5], ['--shell-nav-group', '--shell-nav-bg', 4.5], ['--shell-nav-active-fg', '--shell-nav-active-bg', 4.5, '--shell-nav-bg'],
+  ['--text-primary', '--bg-hover', 4.5, '--bg-surface'], ['--text-primary', '--bg-pressed', 4.5, '--bg-surface'], ['--shell-header-muted', '--shell-header-bg', 4.5],
+  ['--brand-surface-fg', '--brand-surface', 4.5], ['--text-accent', '--bg-accent-soft', 4.5], ['--border-strong', '--bg-canvas', 3],
   ['--shell-header-fg', '--shell-header-bg', 4.5], ['--toast-fg', '--toast-bg', 4.5],
-  ['--border-strong', '--bg-surface', 3], ['--focus-ring', '--bg-surface', 3], ['--shell-nav-active-icon', '--shell-nav-active-bg', 3],
+  ['--border-strong', '--bg-surface', 3], ['--focus-ring', '--bg-surface', 3], ['--shell-nav-active-icon', '--shell-nav-active-bg', 3, '--shell-nav-bg'],
   ['--viz-1', '--bg-surface', 3], ['--viz-brand', '--bg-surface', 3], ['--viz-good', '--bg-surface', 3],
 ];
 
 for (const [themeName, vars] of [['light', light], ['dark', dark]]) {
-  for (const [fg, bg, min] of PAIRS) {
+  for (const [fg, bg, min, base] of PAIRS) {
     test(`${themeName}: ${fg} on ${bg} ≥ ${min}:1`, () => {
-      const r = ratio(resolve(vars, fg), resolve(vars, bg));
+      const r = ratio(resolve(vars, fg), resolve(vars, bg), base && resolve(vars, base));
       assert.ok(r >= min, `${fg} on ${bg} is ${r.toFixed(2)}:1 in ${themeName}, needs ${min}:1`);
     });
   }

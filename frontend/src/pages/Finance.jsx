@@ -3,13 +3,13 @@ import { Icon } from '../components/icons';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth, useAsync, useToast } from '../state';
-import { Alert, Badge, Card, ErrorBox, Modal, PageHead, Spinner } from '../components/ui';
+import { Alert, Badge, Card, Confirm, Empty, ErrorBox, Modal, PageHead, Spinner } from '../components/ui';
 import { ActionDialog, DocumentsPanel, EntityTable, FormModal } from '../components/entity';
 import { fmtDate, fmtDateTime, fmtMoney, today } from '../util';
 
 export function ClaimPage() {
   const { id } = useParams(); const { me, can, hasRole } = useAuth(); const toast = useToast(); const nav = useNavigate();
-  const [c, setC] = useState(null); const [err, setErr] = useState(null); const [apr, setApr] = useState(null); const [edit, setEdit] = useState(false); const [line, setLine] = useState(null); const [adj, setAdj] = useState(null); const [actErr, setActErr] = useState(null); const [busy, setBusy] = useState(false); const [tab, setTab] = useState('lines');
+  const [c, setC] = useState(null); const [err, setErr] = useState(null); const [apr, setApr] = useState(null); const [edit, setEdit] = useState(false); const [line, setLine] = useState(null); const [delLine, setDelLine] = useState(null); const [adj, setAdj] = useState(null); const [actErr, setActErr] = useState(null); const [busy, setBusy] = useState(false); const [tab, setTab] = useState('lines');
   const load = useCallback(async () => { try { const x = await api.get(`/claims/${id}/review`); setC(x); setErr(null); if (x.approval_request_id) setApr(await api.get(`/approvals/${x.approval_request_id}`).catch(() => null)); } catch (e) { setErr(e); } }, [id]);
   useEffect(() => { load(); }, [load]);
   if (err) return <ErrorBox error={err} />; if (!c) return <Spinner />;
@@ -45,8 +45,8 @@ export function ClaimPage() {
               <td className="num mono">{fmtMoney(l.amount, l.currency)}</td><td className="num mono">{fmtMoney(l.claim_amount)}</td><td>{l.receipt_attached ? <span className="row gap-sm" style={{ color: 'var(--status-good-fg)' }}><Icon name="success" size={16} />Attached</span> : <span className="err row gap-sm"><Icon name="error" size={16} />Missing</span>}</td>
               <td className="num mono">{adj ? <input type="number" min="0" max={l.claim_amount} step="0.01" aria-label="Approved amount" style={{ width: 90 }} value={adj[l.id].amount} onChange={(e) => setAdj({ ...adj, [l.id]: { ...adj[l.id], amount: e.target.value } })} /> : l.approved_amount != null ? fmtMoney(l.approved_amount) : '—'}{l.adjust_reason && !adj && <div className="muted small">{l.adjust_reason}</div>}</td>
               {adj && <td><input type="text" aria-label="Adjustment reason" value={adj[l.id].reason} onChange={(e) => setAdj({ ...adj, [l.id]: { ...adj[l.id], reason: e.target.value } })} /></td>}
-              <td className="right nowrap">{editable && <><button className="btn sm" onClick={() => setLine(l)}>Edit</button> <button className="btn sm danger" aria-label="Delete line" onClick={async () => { await api.del(`/e/claim_lines/${l.id}`); load(); }}><Icon name="close" size={16} /></button></>}</td></tr>))}</tbody></table>
-          {lines.length === 0 && <div className="empty">No expense lines yet.</div>}</div>
+              <td className="right nowrap">{editable && <><button className="btn sm" onClick={() => setLine(l)}>Edit</button> <button className="btn sm danger" aria-label={`Delete line ${l.description || l.category_name || ''}`} onClick={() => setDelLine(l)}><Icon name="close" size={16} /></button></>}</td></tr>))}</tbody></table>
+          {lines.length === 0 && <Empty icon="claims">No expense lines yet.</Empty>}</div>
         {adj && <div className="row" style={{ justifyContent: 'flex-end', marginTop: 10 }}><button className="btn" onClick={() => setAdj(null)}>Cancel</button><button className="btn primary" onClick={saveAdjust}>Save adjustments</button></div>}
         {finvPending && <div className="help" style={{ marginTop: 8 }}>Verify receipts and amounts, adjust where policy requires, then approve the “Finance verification” step from the approval route.</div>}
       </Card>
@@ -54,6 +54,7 @@ export function ClaimPage() {
       <Card title="Receipts & supporting documents"><DocumentsPanel entity="claims" recordId={id} canUpload={mine || hasRole('ROL-ADM')} /></Card>
       {edit && <FormModal entity="claims" record={c} onClose={() => setEdit(false)} onSaved={load} />}
       {line && <FormModal entity="claim_lines" record={line.id ? line : undefined} defaults={{ claim_id: Number(id), currency: c.currency, expense_date: today() }} title={line.id ? 'Edit expense line' : 'Add expense line'} onClose={() => setLine(null)} onSaved={load} />}
+      {delLine && <Confirm danger title="Delete this expense line?" message={<>{delLine.merchant ? <b>{delLine.merchant} </b> : null}{delLine.description || delLine.category_name} · {fmtMoney(delLine.amount, delLine.currency)}</>} consequences={['The claim total is recalculated.', 'Any receipt attached to this line is removed from the claim.']} undo={false} yesLabel="Delete line" onNo={() => setDelLine(null)} onYes={async () => { try { await api.del(`/e/claim_lines/${delLine.id}`); load(); } catch (e) { setActErr(e); } setDelLine(null); }} />}
     </>
   );
 }
@@ -71,7 +72,7 @@ export function PaymentsPage() {
       <Card title="Ready for payment" actions={hasRole('ROL-PAY', 'ROL-ADM') && <button className="btn primary sm" disabled={!sel.length} onClick={create}>Create batch ({sel.length})</button>}>
         <table className="t"><thead><tr><th /><th>Claim</th><th>Claimant</th><th className="num">Approved</th><th>Payment status</th></tr></thead><tbody>
           {(ready || []).map((c) => <tr key={c.id}><td><input type="checkbox" aria-label={`Select ${c.number}`} checked={sel.includes(c.id)} onChange={() => setSel((s) => (s.includes(c.id) ? s.filter((x) => x !== c.id) : [...s, c.id]))} /></td><td><Link to={`/claims/${c.id}`}>{c.number}</Link> {c.title}</td><td>{c.claimant}</td><td className="num mono">{fmtMoney(c.approved_amount, c.currency)}</td><td><Badge v={c.payment_status} /></td></tr>)}</tbody></table>
-        {ready && ready.length === 0 && <div className="empty">No claims waiting for payment.</div>}
+        {ready && ready.length === 0 && <Empty icon="payments">No claims waiting for payment.</Empty>}
       </Card>
       <div style={{ height: 14 }} />
       <Card title="Batches" pad={false}>
@@ -119,7 +120,7 @@ export function CommissionPage() {
       <Card title="Target attainment" pad={false}>
         <table className="t"><thead><tr><th>Target</th><th>Owner</th><th>Measure</th><th>Period</th><th className="num">Target</th><th className="num">Actual</th><th style={{ width: 160 }}>Attainment</th></tr></thead><tbody>
           {(att || []).map((a) => <tr key={a.id}><td>{a.number}</td><td>{a.owner_name}</td><td>{a.measure}</td><td>{a.period_label}</td><td className="num mono">{fmtMoney(a.target)}</td><td className="num mono">{fmtMoney(a.actual)}</td><td><div className="row"><div className="bar grow"><i style={{ width: `${Math.min(100, a.pct || 0)}%`, background: (a.pct || 0) >= 100 ? 'var(--good)' : 'var(--primary)' }} /></div><span className="small">{a.pct ?? '—'}%</span></div></td></tr>)}</tbody></table>
-        {att && att.length === 0 && <div className="empty">No active targets.</div>}
+        {att && att.length === 0 && <Empty icon="targets">No active targets.</Empty>}
       </Card>
       <div style={{ height: 14 }} />
       {fin && (

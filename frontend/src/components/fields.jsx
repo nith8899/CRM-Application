@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { cloneElement, isValidElement, useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import { toInputDateTime } from '../util';
 import { useDebounced } from './ui';
 
 /** Autocomplete bound to /lookup/:entity */
-export function Lookup({ entity, value, label, onChange, disabled, filters, placeholder, id, required }) {
+export function Lookup({ entity, value, label, onChange, disabled, filters, placeholder, id, required, ...aria }) {
   const [text, setText] = useState(label || '');
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
@@ -24,12 +24,13 @@ export function Lookup({ entity, value, label, onChange, disabled, filters, plac
 
   return (
     <div ref={box} style={{ position: 'relative' }}>
-      <input id={id} type="text" value={text} disabled={disabled} placeholder={placeholder || 'Search…'} autoComplete="off" required={required && !value}
+      <input id={id} {...aria} type="text" role="combobox" aria-expanded={open && !disabled} aria-autocomplete="list" value={text} disabled={disabled} placeholder={placeholder || 'Type to search…'} autoComplete="off" required={required && !value}
+        onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false); if (e.key === 'ArrowDown' && open) { e.preventDefault(); box.current?.querySelector('[role=option]')?.focus(); } }}
         onFocus={() => setOpen(true)} onChange={(e) => { typed.current = true; setText(e.target.value); setOpen(true); if (!e.target.value) onChange(null, ''); }} />
       {open && !disabled && (
         <div className="search-results" role="listbox">
-          {items.length === 0 && <div className="empty small">No matches</div>}
-          {items.map((i) => <a key={i.id} href="#" role="option" onClick={(e) => { e.preventDefault(); onChange(i.id, i.label); setText(i.label); setOpen(false); }}><span className="grow">{i.label}</span><span className="muted small">{i.sub || ''}</span></a>)}
+          {items.length === 0 && <div className="empty small">{text ? `No matches for “${text}”` : 'Start typing to search'}</div>}
+          {items.map((i) => <a key={i.id} href="#" role="option" onKeyDown={(e) => { const sib = e.key === 'ArrowDown' ? e.currentTarget.nextElementSibling : e.key === 'ArrowUp' ? e.currentTarget.previousElementSibling : null; if (sib) { e.preventDefault(); sib.focus(); } if (e.key === 'Escape') { setOpen(false); box.current?.querySelector('input')?.focus(); } }} onClick={(e) => { e.preventDefault(); onChange(i.id, i.label); setText(i.label); setOpen(false); }}><span className="grow">{i.label}</span><span className="muted small">{i.sub || ''}</span></a>)}
         </div>
       )}
     </div>
@@ -44,7 +45,7 @@ export function FieldInput({ field, value, onChange, error, labelValue, meta, re
   const set = (v) => onChange(f.name, v);
   let input;
   if (f.type === 'longtext') input = <textarea id={id} value={value ?? ''} disabled={ro} onChange={(e) => set(e.target.value)} />;
-  else if (f.type === 'bool') return <label className="check"><input type="checkbox" id={id} checked={!!value} disabled={ro} onChange={(e) => set(e.target.checked)} />{f.label}{error && <span className="err">{error}</span>}</label>;
+  else if (f.type === 'bool') return <label className="check"><input type="checkbox" id={id} checked={!!value} disabled={ro} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}_err` : undefined} onChange={(e) => set(e.target.checked)} />{f.label}{error && <span className="err" id={`${id}_err`}>{error}</span>}</label>;
   else if (f.type === 'select') {
     const opts = f.options || [];
     input = (
@@ -63,12 +64,14 @@ export function FieldInput({ field, value, onChange, error, labelValue, meta, re
   else if (f.type === 'url') input = <input id={id} type="url" value={value ?? ''} disabled={ro} onChange={(e) => set(e.target.value)} />;
   else if (f.type === 'json') input = <textarea id={id} value={typeof value === 'string' ? value : JSON.stringify(value ?? null, null, 2)} disabled={ro} onChange={(e) => set(e.target.value)} />;
   else input = <input id={id} type={f.pwd ? 'password' : 'text'} value={value ?? ''} disabled={ro} autoComplete={f.pwd ? 'new-password' : 'off'} onChange={(e) => set(e.target.value)} />;
+  const describedBy = [f.help && `${id}_help`, error && `${id}_err`].filter(Boolean).join(' ') || undefined;
+  if (isValidElement(input)) input = cloneElement(input, { 'aria-invalid': error ? true : undefined, 'aria-describedby': describedBy, 'aria-required': f.req ? true : undefined });
   return (
     <label className={`f ${['longtext', 'json'].includes(f.type) ? 'full' : ''}`} htmlFor={id}>
-      <span>{f.label}{f.req && <span className="req"> *</span>}</span>
+      <span>{f.label}{f.req && <span className="req" aria-hidden> *</span>}</span>
       {input}
-      {f.help && <span className="help">{f.help}</span>}
-      {error && <span className="err">{error}</span>}
+      {f.help && <span className="help" id={`${id}_help`}>{f.help}</span>}
+      {error && <span className="err" id={`${id}_err`}>{error}</span>}
     </label>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, setToken } from '../api';
 import { useAsync, useAuth, useToast } from '../state';
-import { Alert, Card, ErrorBox, PageHead, Spinner } from '../components/ui';
+import { Alert, Card, Confirm, ErrorBox, PageHead, Spinner } from '../components/ui';
 import { FieldInput } from '../components/fields';
 import { fmtDate } from '../util';
 
@@ -10,7 +10,7 @@ const MUTE = [['approval', 'Approval requests'], ['task', 'Task assignments'], [
 export function MySettingsPage() {
   const { me, refresh } = useAuth(); const toast = useToast();
   const { data, error, reload } = useAsync(() => api.get('/me/settings'), []); const [s, setS] = useState(null); const [pw, setPw] = useState({}); const [pwErr, setPwErr] = useState(null);
-  const { data: dels, reload: rd } = useAsync(() => api.get('/approvals-delegations'), []); const [d, setD] = useState({}); const [dl, setDl] = useState(''); const [derr, setDerr] = useState(null);
+  const { data: dels, reload: rd } = useAsync(() => api.get('/approvals-delegations'), []); const [d, setD] = useState({}); const [endDel, setEndDel] = useState(null); const [dl, setDl] = useState(''); const [derr, setDerr] = useState(null);
   useEffect(() => { if (data) setS({ time_zone: data.time_zone, locale: data.locale, theme: data.settings.theme || '', calendar_sharing: data.settings.calendar_sharing || 'full', muted: (data.settings.notification_prefs || {}).muted || [] }); }, [data]);
   if (error) return <ErrorBox error={error} />; if (!s) return <Spinner />;
   const save = async () => { try { await api.put('/me/settings', { time_zone: s.time_zone, locale: s.locale, theme: s.theme, calendar_sharing: s.calendar_sharing, notification_prefs: { muted: s.muted } }); toast('Settings saved', 'success'); refresh(); } catch (e) { toast(e.message, 'error'); } };
@@ -38,11 +38,12 @@ export function MySettingsPage() {
               <FieldInput field={{ name: 'u', label: 'Delegate to (equal or higher authority)', type: 'ref', ref: 'users' }} value={d.delegate_id} labelValue={dl} onChange={(n, v, l) => { setD({ ...d, delegate_id: v }); setDl(l); }} />
               <div className="row"><label className="f grow">From<input type="date" value={d.start_date || ''} onChange={(e) => setD({ ...d, start_date: e.target.value })} /></label><label className="f grow">To<input type="date" value={d.end_date || ''} onChange={(e) => setD({ ...d, end_date: e.target.value })} /></label></div>
               <label className="f">Reason<input type="text" value={d.reason || ''} onChange={(e) => setD({ ...d, reason: e.target.value })} /></label><ErrorBox error={derr} />
-              {(dels || []).length > 0 && <table className="t"><tbody>{dels.map((x) => <tr key={x.id}><td>{x.delegator_name} → {x.delegate_name}</td><td className="small muted">{fmtDate(x.start_date)} – {fmtDate(x.end_date)}</td><td>{x.active && x.delegator_id === me.id && <button className="btn sm danger" onClick={async () => { await api.del(`/approvals-delegations/${x.id}`); rd(); }}>End</button>}</td></tr>)}</tbody></table>}
+              {(dels || []).length > 0 && <table className="t"><tbody>{dels.map((x) => <tr key={x.id}><td>{x.delegator_name} → {x.delegate_name}</td><td className="small muted">{fmtDate(x.start_date)} – {fmtDate(x.end_date)}</td><td>{x.active && x.delegator_id === me.id && <button className="btn sm danger" onClick={() => setEndDel(x)}>End delegation</button>}</td></tr>)}</tbody></table>}
             </div>
           </Card>
         </div>
       </div>
+      {endDel && <Confirm title="End this delegation?" message={`${endDel.delegate_name} will stop receiving your approvals now.`} undo="You can set up a new delegation at any time." yesLabel="End delegation" onNo={() => setEndDel(null)} onYes={async () => { await api.del(`/approvals-delegations/${endDel.id}`); setEndDel(null); rd(); }} />}
     </>
   );
 }

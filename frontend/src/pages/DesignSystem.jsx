@@ -1,7 +1,7 @@
 // Live design-system gallery for the back-office. Everything here renders from the real tokens and classes,
 // so it doubles as a visual regression page: if a token changes, this page shows it.
 import { useEffect, useState } from 'react';
-import { Alert, Badge, Card, Empty, KV, Modal, PageHead, Tabs } from '../components/ui';
+import { ActionBar, Alert, Badge, Breadcrumbs, Card, Confirm, Drawer, Empty, ErrorSummary, KV, Menu, Modal, PageHead, PermissionState, Segmented, Skeleton, SummaryStrip, Tabs } from '../components/ui';
 import { Icon, iconNames } from '../components/icons';
 
 const RAMPS = [['navy', 'Brand · Navy (structure and action)'], ['gold', 'Brand · Gold (single decisive step; fills only)']];
@@ -20,7 +20,7 @@ const TYPE = [['Display · 24/32 semibold', 'var(--fs-display)', 'var(--lh-displ
   ['Caption · 12/16', 'var(--fs-caption)', 'var(--lh-caption)', 400, 'Updated 5 minutes ago'], ['Khmer · body +6 line height', 'var(--fs-body)', '26px', 400, 'ស្វាគមន៍មកកាន់ប្រព័ន្ធ CRM'],
   ['Vietnamese · body', 'var(--fs-body)', 'var(--lh-body)', 400, 'Cơ hội bán hàng — Ngân hàng Kỹ thương Việt Nam']];
 const SPACE = [[1, 2], [2, 4], [3, 6], [4, 8], [5, 12], [6, 16], [7, 20], [8, 24], [9, 32], [10, 40]];
-const SECTIONS = [['colors', 'Colour'], ['type', 'Typography'], ['space', 'Spacing & radius'], ['buttons', 'Buttons'], ['forms', 'Forms'], ['status', 'Status & feedback'], ['data', 'Data display'], ['nav', 'Navigation'], ['icons', 'Icons']];
+const SECTIONS = [['colors', 'Colour'], ['type', 'Typography'], ['space', 'Spacing & radius'], ['buttons', 'Buttons'], ['forms', 'Forms'], ['status', 'Status & feedback'], ['data', 'Data display'], ['patterns', 'Page patterns'], ['overlays', 'Overlays & states'], ['nav', 'Navigation'], ['icons', 'Icons']];
 
 const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
@@ -38,7 +38,7 @@ export default function DesignSystemPage() {
   const [theme, setTheme] = useState(() => document.documentElement.dataset.theme || 'light');
   const [, force] = useState(0);
   const [tab, setTab] = useState('overview');
-  const [dlg, setDlg] = useState(false);
+  const [dlg, setDlg] = useState(false); const [drawer, setDrawer] = useState(false); const [confirm, setConfirm] = useState(false); const [t2, setT2] = useState('overview');
   useEffect(() => { const prev = document.documentElement.dataset.theme; return () => { if (prev) document.documentElement.dataset.theme = prev; else delete document.documentElement.dataset.theme; }; }, []);
   const switchTheme = (t) => { document.documentElement.dataset.theme = t; setTheme(t); force((n) => n + 1); };
 
@@ -113,11 +113,39 @@ export default function DesignSystemPage() {
         </div>
       </Section>
 
-      <Section id="nav" title="Navigation" note="Navy header with the krama-check pattern across the top; light navy-tinted side panel. The current page uses a white item with a filled icon (shape, not colour alone).">
+      <Section id="nav" title="Navigation" note="One light canvas holds the top bar and the sidebar; each page sits in a rounded white sheet. The current page uses a soft navy tint, medium weight and a filled icon (shape, not colour alone). The krama check stays for navy brand panels such as the login hero.">
         <div className="stack">
           <Tabs value={tab} onChange={setTab} tabs={[{ key: 'overview', label: 'Overview' }, { key: 'quotes', label: 'Quotations', count: 3 }, { key: 'activity', label: 'Activity', count: 12 }]} />
           <div className="row wrap"><button className="chip on">All</button><button className="chip">Open</button><button className="chip">Won</button><button className="chip">Lost</button></div>
-          <div className="krama" style={{ borderRadius: 'var(--radius-lg)', height: 64, display: 'flex', alignItems: 'center', padding: '0 var(--sp-6)', color: 'var(--shell-header-fg)', gap: 'var(--sp-4)' }}><span className="logo">C</span><b>Header · krama check</b></div>
+          <nav className="card side-list" aria-label="Side list example" style={{ position: 'static', maxWidth: 280 }}>{[['Pipeline by stage', 'RPT-01'], ['Pipeline by owner', 'RPT-02'], ['Win / loss analysis (by month)', 'RPT-05']].map(([n, c], i) => <button key={c} className={`side-list-item ${i === 0 ? 'on' : ''}`} aria-current={i === 0 ? 'true' : undefined}><span className="name">{n}</span><span className="code">{c}</span></button>)}</nav>
+          <div className="krama" style={{ borderRadius: 'var(--radius-lg)', height: 64, display: 'flex', alignItems: 'center', padding: '0 var(--sp-6)', color: 'var(--brand-surface-fg)', gap: 'var(--sp-4)' }}><span className="logo">C</span><b>Brand surface · krama check (login hero only)</b></div>
+        </div>
+      </Section>
+
+      <Section id="patterns" title="Page patterns" note="Every page uses the same header: breadcrumbs, record type, title with status, a meta line, then one primary action. Secondary actions sit next to it; everything else goes in More, with destructive actions last. Key facts appear once, in the summary strip.">
+        <div className="stack">
+          <div className="card card-b">
+            <PageHead crumbs={[{ label: 'Opportunities', to: '/opportunities' }, { label: 'OPP-2026-00002' }]} eyebrow="Opportunity" title={<>Data Centre Expansion – Tier III <Badge v="Open" /></>} sub="OPP-2026-00002 · Owner Sreyleak Kim">
+              <ActionBar actions={[{ label: 'Move to Negotiation', icon: 'next', onClick: () => {} }, { label: 'Edit', icon: 'edit', onClick: () => {} }, { label: 'Put on hold', onClick: () => {} }, { label: 'Override probability…', onClick: () => {} }, { label: 'Cancel deal…', danger: true, onClick: () => {} }]} />
+            </PageHead>
+            <SummaryStrip items={[{ k: 'Amount', v: 'USD 620,000' }, { k: 'Probability', v: '70%' }, { k: 'Weighted', v: '434,000' }, { k: 'Forecast', v: <Badge v="Commit" /> }, { k: 'Close date', v: '2026-12-01' }]} />
+            <Tabs value={t2} onChange={setT2} tabs={['Overview', 'Quotations', 'Stakeholders', 'Team', 'Partners', 'Competitors', 'Deal registrations', 'Requirements', 'Documents', 'History'].map((l, i) => ({ key: i ? l : 'overview', label: l, count: i && i < 8 ? i : undefined }))} />
+          </div>
+          <div className="row wrap"><Segmented value="list" items={[{ key: 'list', label: 'List', icon: 'listView', to: '/opportunities' }, { key: 'board', label: 'Board', icon: 'boardView', to: '/pipeline' }]} /><Menu label="Create" icon="add" buttonClass="btn primary" size="sm" items={[{ label: 'Lead', icon: 'leads' }, { label: 'Opportunity', icon: 'opportunities' }, { label: 'Expense claim', icon: 'claims' }]} /><Menu label="Row actions" iconOnly icon="more" buttonClass="iconbtn" items={[{ label: 'Open' }, { label: 'Edit' }, { divider: true }, { label: 'Delete', danger: true }]} /></div>
+          <Breadcrumbs items={[{ label: 'Admin & settings', to: '/admin' }, { label: 'Users', to: '/users' }, { label: 'Sophea Chan' }]} />
+          <div className="card"><div className="bulk-bar"><span>3 selected</span><button className="btn sm"><Icon name="download" size={16} />Export selected</button><button className="btn sm"><Icon name="reassign" size={16} />Change owner</button><div className="grow" /><button className="btn sm ghost">Clear selection</button></div><div className="filter-row"><button className="chip active-filter">Country: Cambodia<Icon name="close" size={16} /></button><button className="chip active-filter">Source: Event<Icon name="close" size={16} /></button></div></div>
+        </div>
+      </Section>
+
+      <Section id="overlays" title="Overlays & states" note="Short forms (8 fields or fewer) open in a dialog; longer ones in a side drawer so the list stays visible. Destructive actions confirm what happens, what's affected, and whether it can be undone. Loading shows skeletons shaped like the content, never a blank page.">
+        <div className="stack">
+          <div className="row wrap"><button className="btn" onClick={() => setDrawer(true)}>Open a drawer form</button><button className="btn danger" onClick={() => setConfirm(true)}>Open a destructive confirm</button></div>
+          <ErrorSummary errors={{ company: 'Company is required', country: 'Country is required' }} />
+          <div className="grid g2"><Card title="Skeleton · table"><Skeleton variant="rows" count={3} /></Card><Card title="Skeleton · details"><Skeleton variant="kv" count={6} /></Card></div>
+          <div className="grid g2"><Card title="Empty state with next step"><Empty icon="leads" title="No leads yet" action={<button className="btn sm"><Icon name="add" size={16} />New lead</button>}>Leads you capture or import appear here.</Empty></Card><PermissionState what="vendor costs" /></div>
+          <div className="row wrap"><span className="muted small">Tooltips: hover or focus →</span><button className="iconbtn" title="Tooltips appear on keyboard focus too" aria-label="Example tooltip"><Icon name="info" /></button></div>
+          {drawer && <Drawer title="New lead" sub="Fields marked * are required" onClose={() => setDrawer(false)}><div className="form-grid"><div className="form-section">Company</div><label className="f"><span>Company<span className="req"> *</span></span><input type="text" /></label><label className="f">Industry<select><option>—</option></select></label><div className="form-section">Contact</div><label className="f">First name<input type="text" /></label><label className="f">Last name<input type="text" /></label></div><div className="form-actions"><button className="btn" onClick={() => setDrawer(false)}>Cancel</button><button className="btn primary" onClick={() => setDrawer(false)}>Create lead</button></div></Drawer>}
+          {confirm && <Confirm danger title="Delete this expense line?" message="Taxi to client site · USD 18" consequences={['The claim total is recalculated.']} undo={false} reasonLabel="Reason" yesLabel="Delete line" onNo={() => setConfirm(false)} onYes={() => setConfirm(false)} />}
         </div>
       </Section>
 

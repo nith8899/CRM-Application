@@ -1,7 +1,7 @@
 // One icon family (Phosphor) behind semantic names. Screens use <Icon name="…" />, never a Phosphor import.
 // Styles: regular for chrome, fill for the selected state only, duotone for empty states / illustrative spots.
 import {
-  AddressBook, ArrowRight, Bell, Briefcase, Buildings, CalendarBlank, CaretDown, CaretUp, CaretUpDown, Certificate, ChartBar, ChartLine,
+  AddressBook, ArrowLeft, ArrowRight, CaretRight, DotsThree, GearSix as Gear, Lock, DownloadSimple, UserSwitch, Rows, SquaresFour, Bell, Briefcase, Buildings, CalendarBlank, CaretDown, CaretUp, CaretUpDown, Certificate, ChartBar, ChartLine,
   ChartLineUp, Check, CheckCircle, CheckSquare, ClipboardText, ClockCounterClockwise, Coins, CurrencyCircleDollar, FileText, FlowArrow,
   Funnel, Gauge, GearSix, Handshake, House, Info, Kanban, List, ListBullets, ListChecks, MagnifyingGlass, Megaphone, Package, PencilSimple,
   Percent, PlugsConnected, Plus, Pulse, Receipt, ShieldCheck, Sparkle, SignOut, Stack, Stamp, Star, Tag, Target, Ticket, Tray, TreeStructure, TrendUp,
@@ -20,7 +20,7 @@ const MAP = {
   audit: ClockCounterClockwise, imports: UploadSimple,
   // chrome & actions
   search: MagnifyingGlass, notifications: Bell, menu: List, close: X, sortAsc: CaretUp, sortDesc: CaretDown, sortable: CaretUpDown,
-  next: ArrowRight, check: Check, edit: PencilSimple, add: Plus, star: Star, ai: Sparkle, signOut: SignOut, settings: UserGear, inbox: Tray,
+  next: ArrowRight, back: ArrowLeft, chevronDown: CaretDown, chevronRight: CaretRight, more: DotsThree, admin_area: Gear, lock: Lock, download: DownloadSimple, reassign: UserSwitch, listView: Rows, boardView: SquaresFour, check: Check, edit: PencilSimple, add: Plus, star: Star, ai: Sparkle, filter: Funnel, signOut: SignOut, settings: UserGear, inbox: Tray,
   // status (always next to a label)
   info: Info, success: CheckCircle, warning: Warning, error: WarningCircle, rejected: XCircle,
 };

@@ -1,7 +1,8 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from './state';
 import Layout from './components/Layout';
-import { Spinner } from './components/ui';
+import { Empty, Spinner } from './components/ui';
+import { Link } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import { EntityListPage, EntityDetailPage } from './pages/EntityPages';
@@ -55,7 +56,7 @@ export default function App() {
         <Route path="design-system" element={<DesignSystemPage />} />
         <Route path=":entity" element={<EntityListPage />} />
         <Route path=":entity/:id" element={<EntityDetailPage />} />
-        <Route path="*" element={<div className="empty">Page not found.</div>} />
+        <Route path="*" element={<div className="card card-b"><Empty icon="search" title="Page not found" action={<Link className="btn" to="/">Back to dashboard</Link>}>The link may be old, or the page was moved in the new navigation.</Empty></div>} />
       </Route>
     </Routes>
   );

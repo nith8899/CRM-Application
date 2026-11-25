@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api, openAuthed, ApiError } from '../api';
 import { useAuth, useMeta, useToast, loadMeta } from '../state';
 import { fmtDate, fmtDateTime, fmtMoney, fmtPct } from '../util';
-import { Alert, Badge, ErrorBox, Modal, Spinner, useDebounced } from './ui';
+import { Alert, Badge, Confirm, Drawer, Empty, ErrorBox, ErrorSummary, Menu, Modal, Skeleton, Spinner, useDebounced } from './ui';
 import { FieldInput } from './fields';
 
 // ------------------------------------------------------------------ value rendering
@@ -29,7 +29,14 @@ export function renderValue(f, row, meta) {
 }
 
 // -------------------------------------------------------------------------- table
-export function EntityTable({ entity, filters = {}, columns, embedded, onNew, refreshKey, title, onRowClick, size = 25, hideToolbar, extraActions }) {
+const NUMERIC = ['money', 'int', 'decimal', 'pct'];
+const csvCell = (v) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+
+/**
+ * List template for every record type: search, status chips, field filters, sortable columns,
+ * row selection with a bulk bar, skeleton loading, empty states, pagination, phone-stacked rows.
+ */
+export function EntityTable({ entity, filters = {}, columns, embedded, onNew, refreshKey, title, onRowClick, size = 25, hideToolbar, extraActions, onCount }) {
   const { meta, error } = useMeta(entity);
   const nav = useNavigate();
   const toast = useToast();
@@ -37,75 +44,149 @@ export function EntityTable({ entity, filters = {}, columns, embedded, onNew, re
   const [page, setPage] = useState(1); const [sort, setSort] = useState(null); const [status, setStatus] = useState('');
   const [data, setData] = useState({ rows: [], total: 0 }); const [loading, setLoading] = useState(true); const [err, setErr] = useState(null);
   const [showImport, setShowImport] = useState(false); const [mine, setMine] = useState(false);
-  const fkey = JSON.stringify(filters);
+  const [showFilters, setShowFilters] = useState(false); const [ff, setFf] = useState({});
+  const [sel, setSel] = useState(() => new Set()); const [owner, setOwner] = useState(null); const [bulkBusy, setBulkBusy] = useState(false);
+  const fkey = JSON.stringify(filters); const ffkey = JSON.stringify(ff);
 
   const load = useCallback(() => {
     if (!meta) return; setLoading(true);
     const p = new URLSearchParams({ page, size });
     if (dq) p.set('q', dq); if (sort) { p.set('sort', sort.name); p.set('dir', sort.dir); } if (status && meta.statusField) p.set(`f_${meta.statusField}`, status); if (mine) p.set('mine', '1');
-    Object.entries(filters).forEach(([k, v]) => v !== undefined && v !== null && p.set(k.startsWith('f_') ? k : `f_${k}`, v));
-    api.get(`/e/${entity}?${p}`).then((d) => { setData(d); setErr(null); }).catch(setErr).finally(() => setLoading(false));
-  }, [meta, entity, page, dq, sort, status, mine, fkey, size, refreshKey]); // eslint-disable-line
+    Object.entries({ ...ff, ...filters }).forEach(([k, v]) => v !== undefined && v !== null && v !== '' && p.set(k.startsWith('f_') ? k : `f_${k}`, v));
+    api.get(`/e/${entity}?${p}`).then((d) => { setData(d); setErr(null); onCount && onCount(d.total); }).catch(setErr).finally(() => setLoading(false));
+  }, [meta, entity, page, dq, sort, status, mine, fkey, ffkey, size, refreshKey]); // eslint-disable-line
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { setPage(1); }, [dq, status, entity, fkey, mine]);
+  useEffect(() => { setPage(1); setSel(new Set()); }, [dq, status, entity, fkey, ffkey, mine]);
 
   if (error) return <ErrorBox error={error} />;
-  if (!meta) return <Spinner />;
-  const cols = (columns ? columns.map((n) => meta.fields.find((f) => f.name === n)).filter(Boolean) : meta.fields.filter((f) => f.list)).slice(0, embedded ? 6 : 9);
+  if (!meta) return <div className={embedded ? '' : 'card'}><Skeleton variant="rows" /></div>;
+  // Column priority: identifier and title first, then status (so it never scrolls out of view), then the rest; max 8.
+  const listCols = columns ? columns.map((n) => meta.fields.find((f) => f.name === n)).filter(Boolean) : meta.fields.filter((f) => f.list);
+  const st = !columns && meta.statusField && listCols.find((f) => f.name === meta.statusField);
+  const lead = listCols.filter((f) => f !== st && (f.name === 'number' || f.name === meta.title));
+  const cols = (st ? [...lead, st, ...listCols.filter((f) => f !== st && !lead.includes(f))] : listCols).slice(0, embedded ? 6 : 8);
   const statusField = meta.statusField && meta.fields.find((f) => f.name === meta.statusField);
+  const filterable = meta.fields.filter((f) => f.list && f.type === 'select' && f.options?.length && f.name !== meta.statusField).slice(0, 4);
+  const activeFilters = Object.entries(ff).filter(([, v]) => v);
+  const filtered = !!(dq || status || mine || activeFilters.length);
   const pages = Math.max(1, Math.ceil(data.total / size));
   const click = (r) => (onRowClick ? onRowClick(r) : nav(`/${entity}/${r.id}`));
+  const selectable = !embedded && !onRowClick;
+  const allOnPage = data.rows.length > 0 && data.rows.every((r) => sel.has(r.id));
+  const toggleRow = (id) => setSel((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const toggleAll = () => setSel(allOnPage ? new Set() : new Set(data.rows.map((r) => r.id)));
+  const clearFilters = () => { setQ(''); setStatus(''); setMine(false); setFf({}); };
+  const label = (f, v) => (f.picklist && meta.labels?.[`${f.picklist}:${v}`]) || v;
+
+  const exportSelected = () => {
+    const rows = data.rows.filter((r) => sel.has(r.id));
+    const csv = [cols.map((f) => csvCell(f.label)).join(','), ...rows.map((r) => cols.map((f) => csvCell(r[`${f.name}__label`] ?? r[f.name])).join(','))].join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([`﻿${csv}`], { type: 'text/csv' })); a.download = `${entity}-selected.csv`; a.click(); URL.revokeObjectURL(a.href);
+    toast(`${rows.length} ${rows.length === 1 ? meta.label.toLowerCase() : meta.plural.toLowerCase()} exported`, 'success');
+  };
+  const reassign = async () => {
+    setBulkBusy(true); let ok = 0; const fails = [];
+    for (const r of data.rows.filter((x) => sel.has(x.id))) {
+      try { await api.put(`/e/${entity}/${r.id}`, { owner_id: owner.id, version: r.version }); ok += 1; } catch (e) { fails.push(`${r.number || r.id}: ${e.message}`); }
+    }
+    setBulkBusy(false); setOwner(null); setSel(new Set()); load();
+    if (ok) toast(`Owner changed on ${ok} record${ok === 1 ? '' : 's'}`, 'success');
+    if (fails.length) toast(`${fails.length} not changed — ${fails.slice(0, 2).join('; ')}`, 'error');
+  };
+
+  const createBtn = onNew && meta.perms.C && !meta.system && embedded ? <button className="btn sm" onClick={onNew}><Icon name="add" size={16} />New {meta.label.toLowerCase()}</button> : null;
+  const dataMenu = !embedded && [
+    meta.perms.X && { label: 'Export all to CSV', icon: 'download', onClick: () => openAuthed(`/e/${entity}/export.csv`, `${entity}.csv`).catch((e) => toast(e.message, 'error')) },
+    meta.perms.I && !meta.system && { label: 'Import from CSV', icon: 'imports', onClick: () => setShowImport(true) },
+  ].filter(Boolean);
 
   return (
-    <div className={embedded ? '' : 'card'}>
+    <div className={embedded ? 'embedded-list' : 'card'}>
       {!hideToolbar && (
-        <div className="toolbar">
-          {title && <h3 style={{ marginRight: 8 }}>{title}</h3>}
-          <input type="search" placeholder={`Search ${meta.plural.toLowerCase()}…`} value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search" />
+        <div className="list-toolbar">
+          {title && <h3 style={{ marginRight: 'var(--sp-4)' }}>{title}</h3>}
+          <div className="search-field"><Icon name="search" size={16} /><input type="search" placeholder={`Search ${meta.plural.toLowerCase()}…`} value={q} onChange={(e) => setQ(e.target.value)} aria-label={`Search ${meta.plural.toLowerCase()}`} /></div>
           {statusField && statusField.options && !embedded && (
-            <div className="row wrap gap-sm">
-              <button className={`chip ${!status ? 'on' : ''}`} onClick={() => setStatus('')}>All</button>
-              {statusField.options.slice(0, 7).map((o) => <button key={o} className={`chip ${status === o ? 'on' : ''}`} onClick={() => setStatus(status === o ? '' : o)}>{o}</button>)}
+            <div className="row wrap gap-sm status-chips" role="group" aria-label="Filter by status">
+              <button className={`chip ${!status ? 'on' : ''}`} aria-pressed={!status} onClick={() => setStatus('')}>All</button>
+              {statusField.options.slice(0, 7).map((o) => <button key={o} className={`chip ${status === o ? 'on' : ''}`} aria-pressed={status === o} onClick={() => setStatus(status === o ? '' : o)}>{label(statusField, o)}</button>)}
             </div>
           )}
+          {!embedded && filterable.length > 0 && <button className={`btn sm ${showFilters || activeFilters.length ? 'on' : 'ghost'}`} aria-expanded={showFilters} onClick={() => setShowFilters(!showFilters)}><Icon name="filter" size={16} />Filter{activeFilters.length ? ` · ${activeFilters.length}` : ''}</button>}
           {meta.hasOwner && !embedded && <label className="row small"><input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> Mine only</label>}
           <div className="grow" />
           {extraActions}
-          {meta.perms.X && !embedded && <button className="btn sm" onClick={() => openAuthed(`/e/${entity}/export.csv`, `${entity}.csv`).catch((e) => toast(e.message, 'error'))}>Export CSV</button>}
-          {meta.perms.I && !meta.system && !embedded && <button className="btn sm" onClick={() => setShowImport(true)}>Import</button>}
-          {onNew && meta.perms.C && !meta.system && <button className="btn primary sm" onClick={onNew}>+ New {meta.label.toLowerCase()}</button>}
+          {dataMenu && dataMenu.length > 0 && <Menu label="Data" icon="download" buttonClass="btn ghost" size="sm" items={dataMenu} />}
+          {createBtn}
         </div>
       )}
-      <ErrorBox error={err} />
-      <div className="table-wrap">
-        <table className="t">
-          <thead><tr>{cols.map((f) => <th key={f.name} className={`sortable ${['money', 'int', 'decimal', 'pct'].includes(f.type) ? 'num' : ''}`} onClick={() => setSort(sort && sort.name === f.name ? { name: f.name, dir: sort.dir === 'asc' ? 'desc' : 'asc' } : { name: f.name, dir: 'asc' })} aria-sort={sort && sort.name === f.name ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>{f.label}{sort && sort.name === f.name ? <Icon name={sort.dir === 'asc' ? 'sortAsc' : 'sortDesc'} size={16} /> : null}</th>)}</tr></thead>
-          <tbody>
-            {data.rows.map((r) => (
-              <tr key={r.id} className="click" tabIndex={0} onClick={() => click(r)} onKeyDown={(e) => e.key === 'Enter' && click(r)}>
-                {cols.map((f) => <td key={f.name} className={['money', 'int', 'decimal', 'pct'].includes(f.type) ? 'num' : ''}>{renderValue(f, r, meta)}</td>)}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {!loading && data.rows.length === 0 && <div className="empty">No {meta.plural.toLowerCase()} found.</div>}
-        {loading && data.rows.length === 0 && <Spinner />}
-      </div>
-      <div className="pager">
-        <span>{data.total} record{data.total === 1 ? '' : 's'}</span>
-        <div className="row">
-          <button className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>‹ Prev</button>
-          <span>Page {page} / {pages}</span>
-          <button className="btn sm" disabled={page >= pages} onClick={() => setPage(page + 1)}>Next ›</button>
+      {showFilters && !embedded && (
+        <div className="filter-row">
+          {filterable.map((f) => <label key={f.name} className="f">{f.label}<select value={ff[f.name] || ''} onChange={(e) => setFf((x) => ({ ...x, [f.name]: e.target.value }))}><option value="">Any</option>{f.options.map((o) => <option key={o} value={o}>{label(f, o)}</option>)}</select></label>)}
+          {activeFilters.length > 0 && <button className="btn sm ghost" onClick={() => setFf({})}>Clear filters</button>}
         </div>
+      )}
+      {!showFilters && activeFilters.length > 0 && (
+        <div className="filter-row">{activeFilters.map(([k, v]) => { const f = meta.fields.find((x) => x.name === k); return <button key={k} className="chip active-filter" onClick={() => setFf((x) => ({ ...x, [k]: '' }))} aria-label={`Remove filter ${f?.label}: ${v}`}>{f?.label}: {label(f, v)}<Icon name="close" size={16} /></button>; })}</div>
+      )}
+      {sel.size > 0 && (
+        <div className="bulk-bar" role="region" aria-label="Bulk actions">
+          <span>{sel.size} selected</span>
+          <button className="btn sm" onClick={exportSelected}><Icon name="download" size={16} />Export selected</button>
+          {meta.hasOwner && meta.perms.G && <button className="btn sm" onClick={() => setOwner({ id: null, label: '' })}><Icon name="reassign" size={16} />Change owner</button>}
+          <div className="grow" /><button className="btn sm ghost" onClick={() => setSel(new Set())}>Clear selection</button>
+        </div>
+      )}
+      <ErrorBox error={err} retry={load} />
+      <div className="table-wrap">
+        {(data.rows.length > 0 || !loading) && (
+          <table className={`t list stack-sm ${selectable ? 'has-sel' : ''}`}>
+            <thead><tr>
+              {selectable && <th className="sel"><input type="checkbox" checked={allOnPage} onChange={toggleAll} aria-label="Select all on this page" /></th>}
+              {cols.map((f) => <th key={f.name} scope="col" className={`sortable ${NUMERIC.includes(f.type) ? 'num' : ''}`} aria-sort={sort && sort.name === f.name ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                <button type="button" className="th-sort" onClick={() => setSort(sort && sort.name === f.name ? { name: f.name, dir: sort.dir === 'asc' ? 'desc' : 'asc' } : { name: f.name, dir: 'asc' })}>{f.label}<Icon name={sort && sort.name === f.name ? (sort.dir === 'asc' ? 'sortAsc' : 'sortDesc') : 'sortable'} size={16} /></button></th>)}
+            </tr></thead>
+            <tbody>
+              {data.rows.map((r) => (
+                <tr key={r.id} className={`click ${sel.has(r.id) ? 'selected' : ''}`} tabIndex={0} onClick={() => click(r)} onKeyDown={(e) => e.key === 'Enter' && e.target === e.currentTarget && click(r)}>
+                  {selectable && <td className="sel" onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={sel.has(r.id)} onChange={() => toggleRow(r.id)} aria-label={`Select ${r.number || r[meta.title] || r.id}`} /></td>}
+                  {cols.map((f) => <td key={f.name} data-label={f.label} title={typeof r[f.name] === 'string' && r[f.name].length > 40 ? r[f.name] : undefined} className={NUMERIC.includes(f.type) ? 'num nowrap' : ['date', 'datetime'].includes(f.type) ? 'nowrap' : ''}>{renderValue(f, r, meta)}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        {!loading && data.rows.length === 0 && (filtered
+          ? <Empty icon="search" title={`No ${meta.plural.toLowerCase()} match`} action={<button className="btn sm" onClick={clearFilters}>Clear search and filters</button>}>Try fewer filters or a different search.</Empty>
+          : <Empty icon={embedded ? 'inbox' : 'inbox'} title={`No ${meta.plural.toLowerCase()} yet`} action={onNew && meta.perms.C && !meta.system ? <button className="btn sm" onClick={onNew}><Icon name="add" size={16} />New {meta.label.toLowerCase()}</button> : null}>{meta.system ? 'Records of this type are created by workflows.' : embedded ? 'Nothing linked to this record yet.' : 'Records you can see will appear here.'}</Empty>)}
+        {loading && data.rows.length === 0 && <Skeleton variant="rows" />}
       </div>
+      {data.total > 0 && (
+        <div className="pager">
+          <span>{data.total <= size ? `${data.total} record${data.total === 1 ? '' : 's'}` : `${(page - 1) * size + 1}–${Math.min(page * size, data.total)} of ${data.total}`}</span>
+          {pages > 1 && <div className="row"><button className="btn sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><span aria-live="polite">Page {page} of {pages}</span><button className="btn sm" disabled={page >= pages} onClick={() => setPage(page + 1)}>Next</button></div>}
+        </div>
+      )}
       {showImport && <ImportModal entity={entity} meta={meta} onClose={() => { setShowImport(false); load(); }} />}
+      {owner && (
+        <Modal title={`Change owner of ${sel.size} ${sel.size === 1 ? meta.label.toLowerCase() : meta.plural.toLowerCase()}`} size="narrow" onClose={() => setOwner(null)} footer={<><button className="btn" onClick={() => setOwner(null)}>Cancel</button><button className="btn primary" disabled={!owner.id || bulkBusy} onClick={reassign}>{bulkBusy ? 'Changing…' : 'Change owner'}</button></>}>
+          <div className="stack"><FieldInput field={{ name: 'bulk_owner', label: 'New owner', type: 'ref', ref: 'users', req: true }} value={owner.id} labelValue={owner.label} onChange={(n, v, l) => setOwner({ id: v, label: l })} /><div className="help">Each record is updated separately, with the same rules and audit as a single edit. Records you can't reassign are listed afterwards.</div></div>
+        </Modal>
+      )}
     </div>
   );
 }
 
 // ------------------------------------------------------------------------- form
-export function EntityForm({ entity, record, defaults = {}, onSaved, onCancel, title }) {
+/** Group fields into sections; fields before the first section heading go under `defaultTitle`. */
+function sectionize(fields, defaultTitle) {
+  const out = []; let cur = null;
+  for (const f of fields) { const s = f.section || (cur ? cur.title : defaultTitle); if (!cur || cur.title !== s) { cur = { title: s, items: [] }; out.push(cur); } cur.items.push(f); }
+  return out;
+}
+export const formFields = (meta) => meta.fields.filter((f) => !f.hide && !(f.readonly && f.name !== 'owner_id') && !(f.name === 'owner_id' && !meta.perms.G) && !(f.name === 'number'));
+
+export function EntityForm({ entity, record, defaults = {}, onSaved, onCancel }) {
   const { meta, error } = useMeta(entity);
   const toast = useToast();
   const [vals, setVals] = useState(null); const [labels, setLabels] = useState({});
@@ -120,9 +201,9 @@ export function EntityForm({ entity, record, defaults = {}, onSaved, onCancel, t
     setLabels(Object.fromEntries(Object.entries(record || {}).filter(([k]) => k.endsWith('__label')).map(([k, v]) => [k.replace('__label', ''), v])));
   }, [meta]); // eslint-disable-line
   if (error) return <ErrorBox error={error} />;
-  if (!meta || !vals) return <Spinner />;
+  if (!meta || !vals) return <Skeleton variant="kv" count={6} />;
 
-  const fields = meta.fields.filter((f) => !f.hide && !(f.readonly && f.name !== 'owner_id') && !(f.name === 'owner_id' && !meta.perms.G) && !(f.name === 'number'));
+  const fields = formFields(meta);
   const fieldErrors = Object.fromEntries(((err && err.data && err.data.errors) || []).filter((e) => e.field).map((e) => [e.field, e.message]));
   const onChange = (name, v, label) => { setVals((x) => ({ ...x, [name]: v })); if (label !== undefined) setLabels((x) => ({ ...x, [name]: label })); };
 
@@ -142,18 +223,21 @@ export function EntityForm({ entity, record, defaults = {}, onSaved, onCancel, t
     } finally { setBusy(false); }
   };
 
-  let lastSection = null;
+  const sections = sectionize(fields, record ? 'Details' : `${meta.label} details`);
+  const hasFieldErrors = Object.keys(fieldErrors).length > 0;
   return (
-    <form onSubmit={submit}>
-      <ErrorBox error={err && !Object.keys(fieldErrors).length ? err : (err ? { message: 'Please correct the highlighted fields', data: {} } : null)} />
-      <div className="form-grid" style={{ marginTop: err ? 10 : 0 }}>
-        {fields.map((f) => {
-          const head = f.section && f.section !== lastSection ? <div key={`s_${f.section}`} className="form-section">{f.section}</div> : null;
-          if (f.section) lastSection = f.section;
-          return (<Fragment key={f.name}>{head}<FieldInput field={f} meta={meta} value={vals[f.name]} labelValue={labels[f.name]} onChange={onChange} error={fieldErrors[f.name]} /></Fragment>);
-        })}
+    <form onSubmit={submit} noValidate>
+      {hasFieldErrors ? <ErrorSummary errors={fieldErrors} /> : <ErrorBox error={err} />}
+      <div className="form-grid">
+        {sections.map((s) => (
+          <Fragment key={s.title}>
+            {sections.length > 1 && <div className="form-section">{s.title}</div>}
+            {s.items.map((f) => <FieldInput key={f.name} field={f} meta={meta} value={vals[f.name]} labelValue={labels[f.name]} onChange={onChange} error={fieldErrors[f.name]} />)}
+          </Fragment>
+        ))}
       </div>
-      <div className="row" style={{ justifyContent: 'flex-end', marginTop: 18 }}>
+      <p className="help" style={{ marginTop: 'var(--sp-5)' }}>Fields marked <span className="req">*</span> are required.</p>
+      <div className="form-actions">
         {onCancel && <button type="button" className="btn" onClick={onCancel}>Cancel</button>}
         <button className="btn primary" disabled={busy}>{busy ? 'Saving…' : record ? 'Save changes' : `Create ${meta.label.toLowerCase()}`}</button>
       </div>
@@ -161,16 +245,20 @@ export function EntityForm({ entity, record, defaults = {}, onSaved, onCancel, t
         <Modal title="Possible duplicates found" size="narrow" onClose={() => setDups(null)} footer={<><button className="btn" onClick={() => setDups(null)}>Review</button><button className="btn primary" disabled={!reason.trim()} onClick={(e) => { setDups(null); submit(e, reason); }}>Create anyway</button></>}>
           <p>{dups.error}</p>
           <ul>{dups.matches.map((m) => <li key={m.id}><Link to={`/${entity}/${m.id}`} target="_blank">{m.number || ''} {m.label}</Link> <span className="muted small">({m.kind === 'match' ? 'same key' : 'similar'})</span></li>)}</ul>
-          <label className="f">Reason to create anyway (required)<input type="text" value={reason} onChange={(e) => setReason(e.target.value)} /></label>
+          <label className="f"><span>Reason to create anyway<span className="req" aria-hidden> *</span></span><input type="text" value={reason} onChange={(e) => setReason(e.target.value)} /></label>
         </Modal>
       )}
     </form>
   );
 }
 
+/** Create/edit container: short forms (≤ 8 fields) open in a dialog, longer ones in a side drawer. */
 export function FormModal({ entity, record, defaults, title, onClose, onSaved }) {
   const { meta } = useMeta(entity);
-  return <Modal title={title || `${record ? 'Edit' : 'New'} ${meta ? meta.label.toLowerCase() : ''}`} size="wide" onClose={onClose}><EntityForm entity={entity} record={record} defaults={defaults} onCancel={onClose} onSaved={(r) => { onSaved && onSaved(r); onClose(); }} /></Modal>;
+  const heading = title || `${record ? 'Edit' : 'New'} ${meta ? meta.label.toLowerCase() : ''}`;
+  const body = <EntityForm entity={entity} record={record} defaults={defaults} onCancel={onClose} onSaved={(r) => { onSaved && onSaved(r); onClose(); }} />;
+  if (meta && formFields(meta).length <= 8) return <Modal title={heading} size="wide" onClose={onClose}>{body}</Modal>;
+  return <Drawer title={heading} sub={record ? (record.number || undefined) : undefined} wide={meta && formFields(meta).length > 20} onClose={onClose}>{body}</Drawer>;
 }
 
 // ------------------------------------------------------------------ action runner
@@ -270,7 +358,7 @@ export function DocumentsPanel({ entity, recordId, canUpload }) {
       <table className="t"><thead><tr><th>File</th><th>Category</th><th>Version</th><th>Uploaded</th><th /></tr></thead>
         <tbody>{docs.map((d) => <tr key={d.id}><td><b>{d.title}</b><div className="muted small">{(d.size / 1024).toFixed(1)} KB · {d.confidentiality}{d.status !== 'Active' ? ` · ${d.status}` : ''}</div></td><td>{d.category}</td><td>v{d.version_no}</td><td>{d.uploaded_by_name}<div className="muted small">{fmtDateTime(d.uploaded_at)}</div></td>
           <td className="right nowrap"><button className="btn sm" onClick={() => openAuthed(`/documents/${d.id}/download`, d.filename).catch((e) => toast(e.message, 'error'))}>Download</button>{canUpload && file && d.status === 'Active' && <button className="btn sm" onClick={() => upload(d.id)}>New version</button>}</td></tr>)}</tbody></table>
-      {docs.length === 0 && <div className="empty">No documents attached.</div>}
+      {docs.length === 0 && <Empty small icon="quotations">No documents attached yet.{canUpload ? ' Choose a file above to upload one.' : ''}</Empty>}
     </div>
   );
 }
@@ -288,13 +376,13 @@ export function HistoryPanel({ entity, recordId }) {
           {r.changes && Object.entries(r.changes).filter(([k]) => !['modified_at', 'version', 'modified_by'].includes(k)).map(([k, [o, n]]) => <div key={k} className="small"><span className="muted">{k}:</span> {o == null ? '∅' : String(o).slice(0, 60)} → <b>{n == null ? '∅' : String(n).slice(0, 60)}</b></div>)}
         </li>
       ))}
-      {rows.length === 0 && <div className="empty">No history yet.</div>}
+      {rows.length === 0 && <Empty small icon="audit">No changes recorded yet.</Empty>}
     </ul>
   );
 }
 
 export function SharePanel({ entity, recordId }) {
-  const [rows, setRows] = useState([]); const [user, setUser] = useState(null); const [ulabel, setUlabel] = useState(''); const [access, setAccess] = useState('read'); const [exp, setExp] = useState(''); const [err, setErr] = useState(null); const toast = useToast();
+  const [rows, setRows] = useState([]); const [revoke, setRevoke] = useState(null); const [user, setUser] = useState(null); const [ulabel, setUlabel] = useState(''); const [access, setAccess] = useState('read'); const [exp, setExp] = useState(''); const [err, setErr] = useState(null); const toast = useToast();
   const load = useCallback(() => api.get(`/e/${entity}/${recordId}/shares`).then(setRows).catch(setErr), [entity, recordId]);
   useEffect(() => { load(); }, [load]);
   const add = async () => { try { await api.post(`/e/${entity}/${recordId}/share`, { user_id: user, access, expires_at: exp || null }); setUser(null); setUlabel(''); load(); toast('Shared', 'success'); } catch (e) { setErr(e); } };
@@ -306,8 +394,9 @@ export function SharePanel({ entity, recordId }) {
         <label className="f">Expires<input type="date" value={exp} onChange={(e) => setExp(e.target.value)} /></label>
         <button className="btn primary" style={{ marginTop: 18 }} disabled={!user} onClick={add}>Share</button></div>
       <table className="t"><thead><tr><th>Shared with</th><th>Access</th><th>Expires</th><th /></tr></thead>
-        <tbody>{rows.map((s) => <tr key={s.id}><td>{s.user_name || s.team_name || `Partner #${s.partner_id}`}</td><td>{s.access}</td><td>{fmtDate(s.expires_at)}</td><td className="right"><button className="btn sm danger" onClick={() => api.del(`/e/${entity}/${recordId}/shares/${s.id}`).then(load)}>Revoke</button></td></tr>)}</tbody></table>
-      {rows.length === 0 && <div className="empty">Not shared with anyone.</div>}
+        <tbody>{rows.map((s) => <tr key={s.id}><td>{s.user_name || s.team_name || `Partner #${s.partner_id}`}</td><td>{s.access}</td><td>{fmtDate(s.expires_at)}</td><td className="right"><button className="btn sm danger" onClick={() => setRevoke(s)}>Revoke</button></td></tr>)}</tbody></table>
+      {rows.length === 0 && <Empty small icon="users">Not shared with anyone. Only people with access through their role can see it.</Empty>}
+      {revoke && <Confirm danger title="Revoke access?" message={`${revoke.user_name || revoke.team_name || 'This partner'} will lose ${revoke.access} access to this record.`} undo="You can share it again later." yesLabel="Revoke access" onNo={() => setRevoke(null)} onYes={async () => { try { await api.del(`/e/${entity}/${recordId}/shares/${revoke.id}`); toast('Access revoked', 'success'); load(); } catch (e) { toast(e.message, 'error'); } setRevoke(null); }} />}
     </div>
   );
 }
