@@ -1,0 +1,21 @@
+# PostgreSQL exactly as requested: localhost:5432, database "postgres", user "postgres", password "123456".
+services:
+  postgres:
+    image: postgres:16
+    container_name: crm-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123456"
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - crm_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  crm_pgdata:
